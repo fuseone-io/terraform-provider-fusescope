@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/apiclients"
-	conv "github.com/SigNoz/terraform-provider-signoz/internal/convertors"
-	"github.com/SigNoz/terraform-provider-signoz/internal/schemas"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/apiclients"
+	conv "github.com/fuseone-io/terraform-provider-fusescope/internal/convertors"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/schemas"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 

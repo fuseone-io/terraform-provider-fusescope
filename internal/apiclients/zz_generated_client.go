@@ -13,7 +13,7 @@ import (
 	"net/url"
 	"strings"
 
-	apitypes "github.com/SigNoz/terraform-provider-signoz/internal/apitypes"
+	apitypes "github.com/fuseone-io/terraform-provider-fusescope/internal/apitypes"
 	"github.com/oapi-codegen/runtime"
 )
 

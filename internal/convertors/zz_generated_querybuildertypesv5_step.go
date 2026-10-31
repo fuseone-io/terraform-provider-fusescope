@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/apitypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/apitypes"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )

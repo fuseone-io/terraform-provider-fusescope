@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/apitypes"
-	"github.com/SigNoz/terraform-provider-signoz/internal/convtypes"
-	"github.com/SigNoz/terraform-provider-signoz/internal/customtypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/apitypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/convtypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/customtypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"

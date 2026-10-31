@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/apitypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/apitypes"
 )
 
 // maxRawBody caps APIError.Raw. The Raw path only fires when the response

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/apiclients"
-	"github.com/SigNoz/terraform-provider-signoz/internal/services"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/apiclients"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/services"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"

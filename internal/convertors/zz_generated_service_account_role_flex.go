@@ -4,8 +4,8 @@ package conv
 import (
 	"context"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/apitypes"
-	"github.com/SigNoz/terraform-provider-signoz/internal/schemas"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/apitypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/schemas"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
