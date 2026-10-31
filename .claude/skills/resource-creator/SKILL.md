@@ -1,7 +1,7 @@
 ---
 name: resource-creator
 description: >-
-  End-to-end workflow for adding a new Terraform resource + data source to terraform-provider-fusescope via the skaff OpenAPI codegen pipeline. Use this whenever the task is to "add", "create", "generate", "scaffold", or "wire up" a new `signoz_<name>` resource/data source from a FuseScope API endpoint — even if the user just names the API (e.g. "dashboard v2 APIs", "downtime schedules", "service accounts") without saying "skaff" or "codegen". It covers declaring the resource in skaff.yml, running the skaff generators in the right order with the right flags, registering the resource in the live provider, generating examples + docs, the build/lint gates, and the two-commit split. Reach for it before hand-writing any resource — most resources are field-for-field and fully generated; a skip is a schema gap to fix upstream, never a convertor to hand-write.
+  End-to-end workflow for adding a new Terraform resource + data source to terraform-provider-fusescope via the skaff OpenAPI codegen pipeline. Use this whenever the task is to "add", "create", "generate", "scaffold", or "wire up" a new `fusescope_<name>` resource/data source from a FuseScope API endpoint — even if the user just names the API (e.g. "dashboard v2 APIs", "downtime schedules", "service accounts") without saying "skaff" or "codegen". It covers declaring the resource in skaff.yml, running the skaff generators in the right order with the right flags, registering the resource in the live provider, generating examples + docs, the build/lint gates, and the two-commit split. Reach for it before hand-writing any resource — most resources are field-for-field and fully generated; a skip is a schema gap to fix upstream, never a convertor to hand-write.
 ---
 
 # Adding a resource to terraform-provider-fusescope
@@ -74,7 +74,7 @@ Edit `internal/provider/provider.go`:
 - add `services.New<Name>Resource` to `Resources()`
 - add `services.New<Name>DataSource` to `DataSources()`
 
-Keep the `services.*` entries grouped (alphabetical), before any hand-written `signoz.*` entries. The generated services set `TypeName = ProviderTypeName + "_<name>"`, so the Terraform type is `signoz_<name>`. Registration must happen before docs (Step 4) — tfplugindocs introspects the live provider schema.
+Keep the `services.*` entries grouped (alphabetical), before any hand-written entries. The generated services set `TypeName = ProviderTypeName + "_<name>"`, so the Terraform type is `fusescope_<name>`. Registration must happen before docs (Step 4) — tfplugindocs introspects the live provider schema.
 
 ## Step 4 — Examples + docs
 
@@ -90,7 +90,7 @@ Run `go mod tidy` + `go mod vendor` **only if a new dependency appeared** (the f
 
 On a `feature/<name>` branch, split the work in two commits:
 1. **regen output:** `skaff.yml` + the `internal/**/zz_generated_*` files
-2. **wiring + docs:** `internal/provider/provider.go`, `examples/.../signoz_<name>/**`, `docs/**/<name>.md`
+2. **wiring + docs:** `internal/provider/provider.go`, `examples/.../fusescope_<name>/**`, `docs/**/<name>.md`
 3. **integration tests:** `tests/`
 
 Then open a PR following the **pull-requests** rule (`.claude/rules/pull-requests.md`) — it owns the PR template and body format.

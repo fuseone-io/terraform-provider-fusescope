@@ -1,6 +1,6 @@
 # Writing a guide (vN→vN+1)
 
-The design and provider survey behind the SKILL's rule: **lead with `import {}` + `terraform plan -generate-config-out`, never a bespoke JSON→HCL converter.** Shipped precedent: `migrate-signoz-alert-to-signoz-rule` and the dashboard v1→v2 half of `v0.0.x-to-v0.1.0` under `templates/guides/`.
+The design and provider survey behind the SKILL's rule: **lead with `import {}` + `terraform plan -generate-config-out`, never a bespoke JSON→HCL converter.** Upstream SigNoz shipped this pattern in its alert→rule and dashboard v1→v2 migration guides.
 
 ## Recommendation: native config generation, not a converter
 
@@ -19,7 +19,7 @@ This works because the v2 resources implement `ImportStatePassthroughID` **and**
 ```hcl
 # migrate.tf — requires Terraform 1.5+
 import {
-  to = signoz_rule.pod_cpu          # or signoz_dashboard.redis_overview
+  to = fusescope_rule.pod_cpu          # or fusescope_dashboard.redis_overview
   id = "<existing-rule-or-dashboard-id>"
 }
 ```
@@ -32,7 +32,7 @@ terraform apply                                     # executes the import block
 terraform plan                                      # should report: No changes
 ```
 
-For a resource-*type* change (alert→rule, or a v1→v2 dashboard swap) the old resource must first leave state: `terraform state rm signoz_alert.<name>`.
+For a resource-*type* change (alert→rule, or a v1→v2 dashboard swap) the old resource must first leave state: `terraform state rm fusescope_alert.<name>`.
 
 **Honest caveats to document** (Datadog documents the identical ones):
 
@@ -56,4 +56,4 @@ None of the surveyed providers (AWS, Datadog, Google, PagerDuty) ships a bespoke
 
 ## If an offline converter is ever genuinely required
 
-Only for authoring from a raw JSON file with **no live server**. Even then, don't hand-roll an `hclwrite` walker — reuse the generated `Flatten*` convertors: a tiny `cmd/` tool reads JSON → `json.Unmarshal` into the `apitypes` DTO → `Flatten*` → typed model → serialize to HCL. The serialize step is the only new work — which is exactly what `-generate-config-out` already does via cty. Simpler still: POST the JSON to a scratch SigNoz and use the import flow above, so no new code is needed.
+Only for authoring from a raw JSON file with **no live server**. Even then, don't hand-roll an `hclwrite` walker — reuse the generated `Flatten*` convertors: a tiny `cmd/` tool reads JSON → `json.Unmarshal` into the `apitypes` DTO → `Flatten*` → typed model → serialize to HCL. The serialize step is the only new work — which is exactly what `-generate-config-out` already does via cty. Simpler still: POST the JSON to a scratch FuseScope and use the import flow above, so no new code is needed.

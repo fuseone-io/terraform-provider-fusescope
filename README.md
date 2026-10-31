@@ -7,43 +7,44 @@
   </picture>
 </a>
 
-# Terraform SigNoz Provider
+# Terraform Provider for FuseScope
 
-> **FuseScope fork.** This repository is FuseOne's independent fork of the
-> [Terraform SigNoz Provider](https://github.com/SigNoz/terraform-provider-signoz)
-> (MPL-2.0), maintained for [FuseScope](https://github.com/fuseone-io/fusescope).
-> It does not track upstream and stays under MPL-2.0; attribution is in
-> [NOTICE](NOTICE). The rest of this README still describes the upstream
-> project until the rebrand lands.
+The **FuseScope provider** lets [Terraform](https://terraform.io) and
+[OpenTofu](https://opentofu.org) manage [FuseScope](https://github.com/fuseone-io/fusescope)
+observability resources as code: alert rules, dashboards, notification channels, routing
+policies, planned maintenance, saved views, users, service accounts and SSO domains.
 
-The **SigNoz Provider** lets [Terraform](https://terraform.io) manage [SigNoz](https://signoz.io) observability resources as code, on both SigNoz Cloud and self-hosted deployments.
+It is FuseOne's independent fork of the
+[Terraform SigNoz Provider](https://github.com/SigNoz/terraform-provider-signoz), does not
+track upstream and stays under the Mozilla Public License 2.0; attribution is in
+[NOTICE](NOTICE).
 
-📖 **[Provider documentation on the Terraform Registry](https://registry.terraform.io/providers/signoz/signoz/latest/docs)**
+Resource documentation is generated into [`docs/`](docs/).
 
 ## Usage
 
 ```terraform
 terraform {
   required_providers {
-    signoz = {
-      source = "signoz/signoz"
+    fusescope = {
+      source = "fuseone-io/fusescope"
     }
   }
 }
 
-provider "signoz" {
-  # SigNoz Cloud region URL, or the UI URL of a self-hosted deployment. Also reads
-  # SIGNOZ_ENDPOINT; defaults to http://localhost:8080.
+provider "fusescope" {
+  # Root URL of your FuseScope instance. Also reads FUSESCOPE_ENDPOINT;
+  # defaults to http://localhost:8080.
   endpoint = "http://localhost:8080"
 
-  # API access token from a service account. Prefer the SIGNOZ_ACCESS_TOKEN
-  # environment variable to keep the secret out of configuration and state.
-  access_token = var.signoz_access_token
+  # API key of a service account. Prefer the FUSESCOPE_ACCESS_TOKEN environment
+  # variable to keep the secret out of configuration and state.
+  access_token = var.fusescope_access_token
 }
 ```
 
-Create an access token from a [SigNoz service account](https://signoz.io/docs/manage/administrator-guide/iam/service-accounts/).
-See the [registry documentation](https://registry.terraform.io/providers/signoz/signoz/latest/docs) for every resource, data source, and example.
+Create the API key on a FuseScope service account whose role can manage the resources
+you declare.
 
 ## Requirements
 
@@ -52,7 +53,7 @@ See the [registry documentation](https://registry.terraform.io/providers/signoz/
 
 ### Why Terraform 1.4 and not 1.0
 
-The provider is built on the [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework), and models much of the SigNoz API as *nested attributes* — objects inside objects, several levels deep, whose inner fields are both optional and computed: you may set them, and the server supplies whatever you leave out.
+The provider is built on the [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework), and models much of the FuseScope API as *nested attributes* — objects inside objects, several levels deep, whose inner fields are both optional and computed: you may set them, and the server supplies whatever you leave out.
 
 Terraform 1.3 and older do not round-trip that shape. After a successful apply, the values the server filled in for attributes the configuration left unset are not reconciled with the plan, and the next `plan` proposes them as changes all over again. The effect is perpetual drift — the apply succeeds, and every subsequent plan wants to make the identical change. No change to the configuration avoids it.
 

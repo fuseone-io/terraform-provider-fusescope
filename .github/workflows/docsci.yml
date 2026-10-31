@@ -28,4 +28,4 @@ jobs:
           git diff --compact-summary --exit-code || \
             (echo; echo "Docs are out of date. Run 'go generate ./...' and commit the result."; exit 1)
       - name: validate
-        run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate -provider-name signoz
+        run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate -provider-name fusescope

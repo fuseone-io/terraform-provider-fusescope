@@ -4,7 +4,7 @@ A [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/
 
 Most of `internal/` is **generated** (`zz_generated_*`) from the FuseScope OpenAPI spec plus a per-resource config (`skaff.yml`). The generator, `skaff`, is private to SigNoz and is **not available to this fork**. Until a replacement generator is chosen, see the `generated-code` rule before changing anything under `internal/`.
 
-The provider's type name, resource names (`signoz_<name>`), env vars (`SIGNOZ_ENDPOINT`, `SIGNOZ_ACCESS_TOKEN`) and the `SIGNOZ-API-KEY` header still carry upstream names. They are user-facing contracts; rename them only in a dedicated change.
+The provider is `fuseone-io/fusescope`: resources are `fusescope_<name>`, env vars `FUSESCOPE_*`. The `SIGNOZ-API-KEY` header, managed role names (`signoz-admin`, …) and dashboard plugin kinds (`signoz/…`) are backend contracts and keep their upstream names.
 
 ## Architecture
 

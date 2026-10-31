@@ -1,5 +1,5 @@
 provider:
-  name: signoz
+  name: fusescope
 
 resources:
   auth_domain:

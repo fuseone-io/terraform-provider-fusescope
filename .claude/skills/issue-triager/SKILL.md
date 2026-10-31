@@ -47,8 +47,8 @@ Verify every hypothesis you read out of source by running it. Reading a validati
 
 Open a **draft PR** carrying the reproduction and nothing else. The fix lands later, after the upstream change ships.
 
-- A **`tests/testdata/resources/signoz_<name>/NN/`** scenario at the next free two-digit number — see the [integration-tester](../integration-tester/SKILL.md) skill.
-- Or an **`examples/resources/signoz_<name>/*.tf`** file. Those are themselves live integration tests: `test_examples.py` runs apply → plan-no-drift → destroy on every one.
+- A **`tests/testdata/resources/fusescope_<name>/NN/`** scenario at the next free two-digit number — see the [integration-tester](../integration-tester/SKILL.md) skill.
+- Or an **`examples/resources/fusescope_<name>/*.tf`** file. Those are themselves live integration tests: `test_examples.py` runs apply → plan-no-drift → destroy on every one.
 - **Not** a Go unit test asserting on generated output. It restates what the generator emitted and goes stale on the next regen.
 
 Keep the PR to the reproduction. Neighbouring test cases, validators and suite improvements aren't the triager's concern.
@@ -74,7 +74,7 @@ Write it for the reporter, not for a reviewer: thank them, say plainly what the 
 ## Standing rules
 
 - **Don't fix it in the provider because that's faster.** Fix the spec or the backend in `fuseone-io/fusescope`; a hand-patch here is lost when generation resumes.
-- **A failure you can't explain from the diff is probably upstream drift.** Nothing is pinned — not `foundryctl`, not the server image — deliberately, so server-side contract tightening surfaces early. Fix the rotted fixture in the PR it surfaced on, and never propose pinning.
+- **A failure you can't explain from the diff is probably upstream drift.** The server image is not pinned — deliberately, so server-side contract tightening surfaces early. Fix the rotted fixture in the PR it surfaced on, and never propose pinning.
 - **The integration suite is label-gated** on `safe-to-integrate`, so a new scenario has not run against a live server until someone adds the label. Offline `terraform validate` is the stand-in, and it needs a positive control — deleting a required field must produce an error, or an inert validate passes silently.
 - **`terraform validate` can't catch server-side normalization.** An enum carrying several spellings of one value validates, plans and applies, then fails the post-apply read with `Provider produced inconsistent result after apply`. Only the integration suite catches that class.
 - PRs follow the [`pull-requests`](../../rules/pull-requests.md) rule. Keep the requester-attribution line first, mirror the template's `####` headings, delete the ones with nothing under them.
@@ -82,6 +82,6 @@ Write it for the reporter, not for a reviewer: thank them, say plainly what the 
 ## Not this skill
 
 - The FuseScope spec changed and everything needs regenerating → **spec-syncer**.
-- Adding a new `signoz_<name>` resource → **resource-creator**.
+- Adding a new `fusescope_<name>` resource → **resource-creator**.
 - Running the suite, or writing a scenario for its own sake → **integration-tester**.
 - A docs or examples gap you have already confirmed → **docs-writer**.

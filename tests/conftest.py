@@ -5,7 +5,7 @@ import pytest
 from fixtures.tool_bin import TERRAFORM, TOOLS
 
 pytest_plugins = [
-    "fixtures.signoz",
+    "fixtures.fusescope",
     "fixtures.tool_bin",
     "fixtures.tool",
 ]
@@ -20,19 +20,13 @@ def pytest_addoption(parser: pytest.Parser):
         "--reuse",
         action="store_true",
         default=False,
-        help="Reuse a cached SigNoz environment across runs instead of creating a new one. Run e.g. `pytest --reuse integration/bootstrap/setup.py::test_setup` to stand one up.",
+        help="Reuse the cached service-account key across runs instead of minting a new one. Run e.g. `pytest --reuse integration/bootstrap/setup.py::test_setup` to mint one.",
     )
     parser.addoption(
         "--teardown",
         action="store_true",
         default=False,
-        help="Tear down the cached SigNoz environment. Run `pytest --teardown integration/bootstrap/setup.py::test_teardown`.",
-    )
-    parser.addoption(
-        "--foundry-binary-path",
-        action="store",
-        default="foundryctl",
-        help="Path to the foundryctl binary used to cast the SigNoz environment.",
+        help="Delete the cached service account. Run `pytest --teardown integration/bootstrap/setup.py::test_teardown`.",
     )
     parser.addoption(
         "--tool",
@@ -59,10 +53,4 @@ def pytest_addoption(parser: pytest.Parser):
         action="store",
         default="go",
         help="Path to the go binary used to build the provider under test.",
-    )
-    parser.addoption(
-        "--license-key",
-        action="store",
-        default="",
-        help="SigNoz license key applied after startup; empty skips license application.",
     )
