@@ -12,7 +12,8 @@
 The **FuseScope provider** lets [Terraform](https://terraform.io) and
 [OpenTofu](https://opentofu.org) manage [FuseScope](https://github.com/fuseone-io/fusescope)
 observability resources as code: alert rules, dashboards, notification channels, routing
-policies, planned maintenance, saved views, users, service accounts and SSO domains.
+policies, planned maintenance, saved views, public dashboards, Real User Monitoring
+applications, users, service accounts and SSO domains.
 
 It is FuseOne's independent fork of the
 [Terraform SigNoz Provider](https://github.com/SigNoz/terraform-provider-signoz), does not
