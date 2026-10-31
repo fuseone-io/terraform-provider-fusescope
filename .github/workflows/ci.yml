@@ -4,53 +4,40 @@ on:
   pull_request:
     branches:
       - main
-  pull_request_target:
-    types:
-      - labeled
+
+permissions:
+  contents: read
 
 jobs:
-  fmt:
-    if: |
-      (github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork && github.event.pull_request.user.login != 'dependabot[bot]' && ! contains(github.event.pull_request.labels.*.name, 'safe-to-test')) ||
-      (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe-to-test'))
-    uses: signoz/primus.workflows/.github/workflows/go-fmt.yaml@main
-    secrets: inherit
-    with:
-      PRIMUS_REF: main
-      GO_VERSION: "1.25"
+  go:
+    name: ${{ matrix.check }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [fmt, deps, test, build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: fmt
+        if: matrix.check == 'fmt'
+        run: |
+          out=$(gofmt -s -l $(git ls-files '*.go'))
+          if [ -n "$out" ]; then echo "$out"; echo "::error::Go files need gofmt -s."; exit 1; fi
+      - name: deps
+        if: matrix.check == 'deps'
+        run: go mod tidy -diff && go mod verify
+      - name: test
+        if: matrix.check == 'test'
+        run: go test ./...
+      - name: build
+        if: matrix.check == 'build'
+        run: go build ./...
+
   lint:
-    if: |
-      (github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork && github.event.pull_request.user.login != 'dependabot[bot]' && ! contains(github.event.pull_request.labels.*.name, 'safe-to-test')) ||
-      (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe-to-test'))
-    uses: signoz/primus.workflows/.github/workflows/go-lint.yaml@main
-    secrets: inherit
-    with:
-      PRIMUS_REF: main
-      GO_VERSION: "1.25"
-  deps:
-    if: |
-      (github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork && github.event.pull_request.user.login != 'dependabot[bot]' && ! contains(github.event.pull_request.labels.*.name, 'safe-to-test')) ||
-      (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe-to-test'))
-    uses: signoz/primus.workflows/.github/workflows/go-deps.yaml@main
-    secrets: inherit
-    with:
-      PRIMUS_REF: main
-      GO_VERSION: "1.25"
-  test:
-    if: |
-      (github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork && github.event.pull_request.user.login != 'dependabot[bot]' && ! contains(github.event.pull_request.labels.*.name, 'safe-to-test')) ||
-      (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe-to-test'))
-    uses: signoz/primus.workflows/.github/workflows/go-test.yaml@main
-    secrets: inherit
-    with:
-      PRIMUS_REF: main
-      GO_TEST_CONTEXT: ./...
-      GO_VERSION: "1.25"
-  build:
-    # Not primus go-build: that requires a Dockerfile and pushes an image. Release artifacts come from build.yml.
-    if: |
-      (github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork && github.event.pull_request.user.login != 'dependabot[bot]' && ! contains(github.event.pull_request.labels.*.name, 'safe-to-test')) ||
-      (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe-to-test'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,4 +45,6 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - run: go build ./...
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12.2

@@ -1,0 +1,11 @@
+Terraform Provider for FuseScope
+
+This product is derived from the Terraform SigNoz Provider
+(https://github.com/SigNoz/terraform-provider-signoz), copyright 2024-present
+SigNoz Inc., licensed under the Mozilla Public License, Version 2.0. The full
+history of the original work is preserved in this repository up to the fork
+point 14baa75b6c8976bbc9e83070a9848dc221bec55e.
+
+This repository as a whole remains under the Mozilla Public License 2.0 (see
+LICENSE). Files modified after the fork point carry their changes in this
+repository's git history.

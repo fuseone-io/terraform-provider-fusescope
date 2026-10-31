@@ -22,7 +22,7 @@ jobs:
         uses: crazy-max/ghaction-import-gpg@v6
         id: import_gpg
         with:
-          gpg_private_key: ${{ secrets.PRIMUS_GPG_PRIVATE_KEY }}
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v6
         with:
