@@ -1,0 +1,5 @@
+[
+  { "op": "replace", "path": "/sample_rate", "value": 0.25 },
+  { "op": "add", "path": "/pii_policy/require_consent", "value": true },
+  { "op": "add", "path": "/source_maps", "value": { "retention": "30d", "keep_newest_releases": false } }
+]
