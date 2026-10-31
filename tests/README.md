@@ -73,6 +73,8 @@ If an example depends on a resource it doesn't define (e.g. it references anothe
 - **skip it** in the examples integration test, or
 - **bundle the prerequisite into the same file** — define the dependency resource and the example's own resource together, so the single file applies cleanly.
 
+Input variables (channel secrets, a service name) get fake values from `VARIABLES` in `test_examples.py`; URLs point at `example.com`, so nothing reaches a real Slack or PagerDuty. Each directory under [`examples/recipes/`](../examples/recipes) is applied as one configuration.
+
 ## Test data
 
 `testdata/` holds Terraform configs that exercise the provider beyond the curated, user-facing [`examples/`](../examples). Same top-level layout — `resources/fusescope_<name>/` — so the suite can drive every config here.
