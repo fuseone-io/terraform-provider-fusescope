@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/provider"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 

@@ -5,11 +5,11 @@ package schemas
 import (
 	"context"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/validators"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/validators"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/SigNoz/terraform-provider-signoz/internal/customtypes"
+	"github.com/fuseone-io/terraform-provider-fusescope/internal/customtypes"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )

@@ -1,4 +1,4 @@
-module github.com/SigNoz/terraform-provider-signoz
+module github.com/fuseone-io/terraform-provider-fusescope
 
 go 1.25.8
 
