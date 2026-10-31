@@ -9,6 +9,13 @@
 
 # Terraform SigNoz Provider
 
+> **FuseScope fork.** This repository is FuseOne's independent fork of the
+> [Terraform SigNoz Provider](https://github.com/SigNoz/terraform-provider-signoz)
+> (MPL-2.0), maintained for [FuseScope](https://github.com/fuseone-io/fusescope).
+> It does not track upstream and stays under MPL-2.0; attribution is in
+> [NOTICE](NOTICE). The rest of this README still describes the upstream
+> project until the rebrand lands.
+
 The **SigNoz Provider** lets [Terraform](https://terraform.io) manage [SigNoz](https://signoz.io) observability resources as code, on both SigNoz Cloud and self-hosted deployments.
 
 📖 **[Provider documentation on the Terraform Registry](https://registry.terraform.io/providers/signoz/signoz/latest/docs)**
