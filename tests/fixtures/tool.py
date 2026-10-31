@@ -76,7 +76,7 @@ def workspace(tmp_path_factory: pytest.TempPathFactory) -> Callable[[Path], Path
 class Tool:
     """Runs a Terraform-compatible CLI in a workspace against the dev-override provider."""
 
-    def __init__(self, workdir: Path, cli_config: Path, fusescope: FuseScope, binary: str = "terraform"):
+    def __init__(self, workdir: Path, cli_config: Path, fusescope: FuseScope, binary: str = "terraform", variables: dict[str, str] | None = None):
         self.workdir = workdir
         self.binary = binary
         self.env = {
@@ -85,6 +85,7 @@ class Tool:
             "TF_IN_AUTOMATION": "1",
             "FUSESCOPE_ENDPOINT": fusescope.endpoint,
             "FUSESCOPE_ACCESS_TOKEN": fusescope.access_token,
+            **{f"TF_VAR_{name}": value for name, value in (variables or {}).items()},
         }
 
     def _run(self, *args: str) -> subprocess.CompletedProcess:
