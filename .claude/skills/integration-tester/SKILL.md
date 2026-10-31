@@ -1,12 +1,14 @@
 ---
 name: integration-tester
 description: >-
-  Run the end-to-end integration suite (spins up a real SigNoz via foundry, drives Terraform against a locally-built provider, asserts no drift), test a resource change against a live server, add or debug a `tests/testdata/` scenario, or investigate a `terraform plan` that won't converge. Use this whenever the task is "run the integration tests", "test this against a real SigNoz", "add a testdata scenario", "why is there drift after apply", or verifying a create/update round-trips cleanly. The suite lives under `tests/` (Python + pytest + uv).
+  Run the end-to-end integration suite (spins up a real server via foundry, drives Terraform against a locally-built provider, asserts no drift), test a resource change against a live server, add or debug a `tests/testdata/` scenario, or investigate a `terraform plan` that won't converge. Use this whenever the task is "run the integration tests", "test this against a real FuseScope", "add a testdata scenario", "why is there drift after apply", or verifying a create/update round-trips cleanly. The suite lives under `tests/` (Python + pytest + uv).
 ---
 
 @tests/README.md
 
 ## Standing rules
+
+- **The suite still casts upstream SigNoz through foundry**, which is API-compatible with FuseScope. A FuseScope casting replaces it later; until then a pass proves compatibility with the shared API, not with FuseScope-only behavior.
 
 - **Pause after create/update verification.** When walking a resource through a flow by hand, stop once create/update + no-drift is confirmed — don't auto-chain into `terraform destroy`; let the user decide.
 - Test-writing conventions (fixtures, skip-at-collection, config via `--flags` not env, no `_helper()`) are the **pytest** rule — it auto-loads on any `.py` file.
@@ -27,4 +29,4 @@ Keep each scenario **minimal-but-valid** — the smallest config that isolates t
 
 ## When a round-trip won't converge
 
-Persistent post-apply drift is usually a **server-side round-trip** issue, not a provider bug — the API drops or enriches fields so a create→read isn't stable (e.g. `notificationSettings.renotify` dropped, `condition` enriched with unset optionals, durations normalized `5m`→`5m0s`). That's a fix for the SigNoz backend, not the provider.
+Persistent post-apply drift is usually a **server-side round-trip** issue, not a provider bug — the API drops or enriches fields so a create→read isn't stable (e.g. `notificationSettings.renotify` dropped, `condition` enriched with unset optionals, durations normalized `5m`→`5m0s`). That's a fix for the FuseScope backend (`fuseone-io/fusescope`), not the provider.

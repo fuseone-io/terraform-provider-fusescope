@@ -1,12 +1,14 @@
 ---
 name: resource-creator
 description: >-
-  End-to-end workflow for adding a new Terraform resource + data source to terraform-provider-signoz via the skaff OpenAPI codegen pipeline. Use this whenever the task is to "add", "create", "generate", "scaffold", or "wire up" a new `signoz_<name>` resource/data source from a SigNoz API endpoint — even if the user just names the API (e.g. "dashboard v2 APIs", "downtime schedules", "service accounts") without saying "skaff" or "codegen". It covers declaring the resource in skaff.yml, running the skaff generators in the right order with the right flags, registering the resource in the live provider, generating examples + docs, the build/lint gates, and the two-commit split. Reach for it before hand-writing any resource — most resources are field-for-field and fully generated; a skip is a schema gap to fix upstream, never a convertor to hand-write.
+  End-to-end workflow for adding a new Terraform resource + data source to terraform-provider-fusescope via the skaff OpenAPI codegen pipeline. Use this whenever the task is to "add", "create", "generate", "scaffold", or "wire up" a new `signoz_<name>` resource/data source from a FuseScope API endpoint — even if the user just names the API (e.g. "dashboard v2 APIs", "downtime schedules", "service accounts") without saying "skaff" or "codegen". It covers declaring the resource in skaff.yml, running the skaff generators in the right order with the right flags, registering the resource in the live provider, generating examples + docs, the build/lint gates, and the two-commit split. Reach for it before hand-writing any resource — most resources are field-for-field and fully generated; a skip is a schema gap to fix upstream, never a convertor to hand-write.
 ---
 
-# Adding a resource to terraform-provider-signoz
+# Adding a resource to terraform-provider-fusescope
 
-This provider is **generated**, not hand-written. A tool called [`SigNoz/skaff`](https://github.com/SigNoz/skaff) reads the SigNoz OpenAPI spec plus a per-resource config (`skaff.yml`) and emits the `zz_generated_*` files across `internal/`. Adding a resource means *declaring* it and *running the pipeline* — you almost never write resource logic by hand.
+This provider is **generated**, not hand-written. A tool called `skaff` reads the FuseScope OpenAPI spec plus a per-resource config (`skaff.yml`) and emits the `zz_generated_*` files across `internal/`. Adding a resource means *declaring* it and *running the pipeline* — you almost never write resource logic by hand.
+
+> **Blocked:** `skaff` is private to SigNoz and not available to this fork, so Step 2 cannot run. Declare the resource (Step 1) and record the request in an issue in `fuseone-io/terraform-provider-fusescope`; follow the `generated-code` rule for anything that cannot wait.
 
 Many resources already shipped this way. Follow their shape; don't invent a new one.
 
@@ -16,20 +18,20 @@ Many resources already shipped this way. Follow their shape; don't invent a new 
 
 ## Inputs (where things live)
 
-Two inputs you provide; skaff itself comes from primus:
+Two inputs:
 
-- **Spec:** the canonical SigNoz OpenAPI spec (`SigNoz/signoz`, `main`, `docs/api/openapi.yml`). Fetch a fresh copy — never a stale in-repo copy:
+- **Spec:** the FuseScope OpenAPI spec (`fuseone-io/fusescope`, `main`, `docs/api/openapi.yml`). Fetch a fresh copy — never a stale in-repo copy:
 
 ```sh
 mkdir -p tmp/spec
-curl -fsSL https://raw.githubusercontent.com/SigNoz/signoz/main/docs/api/openapi.yml -o tmp/spec/openapi.yml
+curl -fsSL https://raw.githubusercontent.com/fuseone-io/fusescope/main/docs/api/openapi.yml -o tmp/spec/openapi.yml
 ```
 
 If you need a spec that isn't plain `main` — e.g. an open PR's contract merged in — hand-produce the merged spec into that same path, `tmp/spec/openapi.yml`.
 
 - **Config:** `skaff.yml` at this repo root (you edit this in Step 1).
 
-`skaff` runs through **primus** — the skaff-runner script (Step 2) invokes it, so you never fetch or build the binary yourself. If primus isn't set up, run the **primus-setter** skill first.
+`skaff` is not available to this fork (see the note at the top).
 
 ## Step 1 — Declare in `skaff.yml`
 
@@ -64,20 +66,7 @@ data_sources:
 
 ## Step 2 — Run the pipeline
 
-Run the **skaff-runner** script — it runs the whole pipeline deterministically, through primus. Pass the spec you fetched:
-
-```sh
-bash .claude/skills/skaff-runner/scripts/run-pipeline.sh tmp/spec/openapi.yml
-```
-
-Preview the exact skaff commands first with `DRY_RUN=1 …`. See the [skaff-runner skill](../skaff-runner/SKILL.md) for the flags and prerequisites.
-
-The pipeline regenerates **every** declared resource, not just the new one. That's expected — `git status` will show your new files plus byte-identical re-renders of the others.
-
-### Watch the per-step output
-
-- **`skaff types`** prints how many customtypes are needed. A nested object (planned_maintenance's `schedule` → Schedule/Recurrence) brings in `internal/customtypes/` + per-customtype convertors; an all-scalar resource needs none.
-- **`flex` and `services`** report a `skipped` count. A skip means the resource can't be generated field-for-field — treat it as a **schema gap to fix upstream**, not a convertor to hand-write (see "When skaff skips a schema" below). skaff-runner owns the `skipped 0` gate; see the [skaff-runner skill](../skaff-runner/SKILL.md).
+Blocked: the pipeline needs `skaff`, which this fork does not have. When a replacement generator is chosen, this step becomes its runbook. Until then, stop after Step 1 and open the issue.
 
 ## Step 3 — Register in the live provider
 
@@ -108,6 +97,6 @@ Then open a PR following the **pull-requests** rule (`.claude/rules/pull-request
 
 ## When skaff skips a schema — fix the schema, not skaff
 
-Run `skaff types`; for each skipped schema it prints the name + failing OAS path + reason. Log it, fix it upstream in the SigNoz schema, regenerate, and repeat until `skipped 0`.
+Run `skaff types`; for each skipped schema it prints the name + failing OAS path + reason. Log it, fix it in the FuseScope schema (`fuseone-io/fusescope`, `docs/api/openapi.yml`), regenerate, and repeat until `skipped 0`.
 
 The codegen references live in `.claude/docs/` — the catalog of known patterns and their fixes is in [`patterns.md`](../../docs/patterns.md). Read it before starting a complex resource, and recognize the shape there before hand-fixing.

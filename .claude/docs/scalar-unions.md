@@ -30,7 +30,7 @@ This was a deliberate, locked choice: apply the AWS-style jsontype uniformly acr
 
 For the provider author this is mostly automatic — the shape is detected from the spec and the `jsontypes.Normalized` typing + a raw-JSON convertor bridge are generated. What you need to know per shape:
 
-| Shape | Upstream (SigNoz) change? |
+| Shape | Upstream (FuseScope) change? |
 |-------|---------------------------|
 | Named or inline scalar `oneOf` (`Step`, `FunctionArg.value`) | **None** — automatic. Any old `property_types: → string` override is removed. |
 | Free-form `{type: object}` (`SigNozDatasourceSpec`) | **None** — automatic (an empty object is a legitimate shape). |

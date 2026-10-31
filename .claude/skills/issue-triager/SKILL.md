@@ -1,7 +1,7 @@
 ---
 name: issue-triager
 description: >-
-  Triage a reported bug against terraform-provider-signoz: reproduce it, decide whether it is real and where the defect actually lives, add the coverage that proves it, document the shape in the pattern catalog, and hand over a suggested upstream fix. Use whenever the task is to "triage" — given a GitHub issue link (e.g. "triage SigNoz/terraform-provider-signoz#154") or just a prose description of a failure ("a user says an invalid dashboard passes plan then fails at apply") — and whenever a report needs confirming before anyone writes a fix. It ends at a suggested fix plus a draft PR carrying the reproduction; it does NOT implement the fix, comment on the public issue, or close it unless the user asks.
+  Triage a reported bug against terraform-provider-fusescope: reproduce it, decide whether it is real and where the defect actually lives, add the coverage that proves it, document the shape in the pattern catalog, and hand over a suggested upstream fix. Use whenever the task is to "triage" — given a GitHub issue link (e.g. "triage fuseone-io/terraform-provider-fusescope#12") or just a prose description of a failure ("a user says an invalid dashboard passes plan then fails at apply") — and whenever a report needs confirming before anyone writes a fix. It ends at a suggested fix plus a draft PR carrying the reproduction; it does NOT implement the fix, comment on the public issue, or close it unless the user asks.
 ---
 
 # Triage a reported bug
@@ -34,14 +34,14 @@ Read the generated schema for the affected resource (`internal/schemas/zz_genera
 
 | Symptom | Owner |
 |---|---|
-| A spec constraint is missing from the plan-time schema | **skaff** — a post-processing traversal is incomplete |
-| The spec itself is wrong, or a field needs `required` | **SigNoz** — `docs/api/openapi.yml` comes from Go struct tags |
-| The server won't round-trip what it accepted | **SigNoz** backend |
+| A spec constraint is missing from the plan-time schema | **generator** — record it in an issue here; the generator (`skaff`) is not available to this fork |
+| The spec itself is wrong, or a field needs `required` | **FuseScope** — `fuseone-io/fusescope`, `docs/api/openapi.yml`, generated from Go struct tags |
+| The server won't round-trip what it accepted | **FuseScope** backend (`fuseone-io/fusescope`) |
 | Docs, examples, or missing coverage | **this repo** |
 
-**A generated-output bug is never fixed in the provider.** A guard committed here is wiped by the next regen. See [`patterns.md`](../../docs/patterns.md) and try to determine which class of problem it belongs to.
+**A generated-output bug is not fixed by hand in the provider** — follow the `generated-code` rule. See [`patterns.md`](../../docs/patterns.md) and try to determine which class of problem it belongs to.
 
-Verify every hypothesis you read out of source by running it. Reading a validation path in the SigNoz source is not a reproduction.
+Verify every hypothesis you read out of source by running it. Reading a validation path in the FuseScope source is not a reproduction.
 
 ### 4. Add the coverage that proves it, in a new PR
 
@@ -55,7 +55,7 @@ Keep the PR to the reproduction. Neighbouring test cases, validators and suite i
 
 ### 5. Document the shape in the pattern catalog
 
-Add one entry to [`patterns.md`](../../docs/patterns.md), in the same PR if missing, under Terraform-side or SigNoz-side. Match the existing format: a `### <shape name>` noun phrase, a one-line description of the shape, then `- **Pitfall:**` / `- **Fix:**` / `- **Example:**` citing this issue and the upstream one. Do not repeat patterns.
+Add one entry to [`patterns.md`](../../docs/patterns.md), in the same PR if missing, under Terraform-side or server-side. Match the existing format: a `### <shape name>` noun phrase, a one-line description of the shape, then `- **Pitfall:**` / `- **Fix:**` / `- **Example:**` citing this issue and the upstream one. Do not repeat patterns.
 
 The entry describes the **class**, not the incident. Someone hitting the next instance should recognise it there.
 
@@ -73,15 +73,15 @@ Write it for the reporter, not for a reviewer: thank them, say plainly what the 
 
 ## Standing rules
 
-- **Don't fix it in the provider because that's faster.** The next regen wipes it and the next reporter hits it again.
-- **A failure you can't explain from the diff is probably upstream drift.** Nothing is pinned — not `foundryctl`, not the SigNoz image, not skaff — deliberately, so server-side contract tightening surfaces early. Fix the rotted fixture in the PR it surfaced on, and never propose pinning.
-- **The integration suite is label-gated** on `safe-to-integrate`, so a new scenario has not run against a live SigNoz until someone adds the label. Offline `terraform validate` is the stand-in, and it needs a positive control — deleting a required field must produce an error, or an inert validate passes silently.
+- **Don't fix it in the provider because that's faster.** Fix the spec or the backend in `fuseone-io/fusescope`; a hand-patch here is lost when generation resumes.
+- **A failure you can't explain from the diff is probably upstream drift.** Nothing is pinned — not `foundryctl`, not the server image — deliberately, so server-side contract tightening surfaces early. Fix the rotted fixture in the PR it surfaced on, and never propose pinning.
+- **The integration suite is label-gated** on `safe-to-integrate`, so a new scenario has not run against a live server until someone adds the label. Offline `terraform validate` is the stand-in, and it needs a positive control — deleting a required field must produce an error, or an inert validate passes silently.
 - **`terraform validate` can't catch server-side normalization.** An enum carrying several spellings of one value validates, plans and applies, then fails the post-apply read with `Provider produced inconsistent result after apply`. Only the integration suite catches that class.
 - PRs follow the [`pull-requests`](../../rules/pull-requests.md) rule. Keep the requester-attribution line first, mirror the template's `####` headings, delete the ones with nothing under them.
 
 ## Not this skill
 
-- The upstream spec changed and everything needs regenerating → **spec-syncer**.
+- The FuseScope spec changed and everything needs regenerating → **spec-syncer**.
 - Adding a new `signoz_<name>` resource → **resource-creator**.
 - Running the suite, or writing a scenario for its own sake → **integration-tester**.
 - A docs or examples gap you have already confirmed → **docs-writer**.

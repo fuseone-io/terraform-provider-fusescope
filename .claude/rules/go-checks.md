@@ -5,13 +5,12 @@ paths:
 
 # Go checks before opening a PR
 
-For any change touching Go, run the primus Go checks locally **before opening a PR**. They mirror the CI jobs (`signoz/primus.workflows`), so green locally means green in CI. All four must pass.
+For any change touching Go, run the checks the `ci` workflow runs **before opening a PR**. All must pass.
 
 ```sh
-make -f "$PRIMUS_HOME/src/make/main.mk" go-fmt    # format Go files
-make -f "$PRIMUS_HOME/src/make/main.mk" go-lint   # lint (matches CI)
-make -f "$PRIMUS_HOME/src/make/main.mk" go-deps   # verify go.mod / go.sum
-make -f "$PRIMUS_HOME/src/make/main.mk" go-test   # run tests
+gofmt -s -l $(git ls-files '*.go')   # must print nothing
+go mod tidy -diff && go mod verify
+go test ./...
+go build ./...
+golangci-lint run                    # v2.12.2, the version pinned in .github/workflows/ci.yml
 ```
-
-Run them through primus, not a bare `golangci-lint` / `go test` — the targets pin the versions and flags CI uses. Needs `PRIMUS_HOME` set; see the "Tooling — primus" section in `.claude/CLAUDE.md` for one-time setup (check `PRIMUS_HOME` first — don't re-clone if it's already there).

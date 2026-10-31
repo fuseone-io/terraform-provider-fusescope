@@ -12,9 +12,9 @@ A Terraform resource's schema model and the API's request/response types are alw
 
 **There is no hand-written convertor layer.**
 
-> If a resource can't be generated **field-for-field**, that's a **schema violation** — fix the SigNoz schema so skaff *can* generate it. Don't hand-write a convertor.
+> If a resource can't be generated **field-for-field**, that's a **schema violation** — fix the FuseScope schema so skaff *can* generate it. Don't hand-write a convertor.
 
-Everything skaff can't map is a schema shape to fix upstream — see the SigNoz-side patterns in [`patterns.md`](patterns.md).
+Everything skaff can't map is a schema shape to fix in `fuseone-io/fusescope` — see the server-side patterns in [`patterns.md`](patterns.md).
 
 ## How it works — two generation steps
 

@@ -1,6 +1,6 @@
 # Patterns
 
-Recognize a shape, apply the known fix. Two sides: **Terraform-side** patterns (how the provider models and converts) and **SigNoz-side** patterns (schema shapes that need an *upstream* fix so skaff can map them at all). skaff does no magic — everything it skips is one of the shapes below.
+Recognize a shape, apply the known fix. Two sides: **Terraform-side** patterns (how the provider models and converts) and **server-side** patterns (schema shapes that need an *upstream* fix so skaff can map them at all). skaff does no magic — everything it skips is one of the shapes below.
 
 Each entry is *shape · pitfall · fix · example* (examples are real cases we hit). This is a reference, not a log; per-resource history lives in git. Background: [`architecture.md`](architecture.md) (the pipeline) and [`convertors.md`](convertors.md) (how model↔wire conversion works).
 
@@ -12,7 +12,7 @@ Each entry is *shape · pitfall · fix · example* (examples are real cases we h
 
 Every shipped resource is generated **field-for-field**: flatten returns `*schemas.<R>DataSourceModel` (the datasource is a superset of the resource), codegen narrows it with `<r>ResourceFromDS`, and `flex`/`services` print `skipped 0`. **There are no hand-written convertors** — `internal/convertors` and `internal/services` are 100% `zz_generated_*`. **Example:** route_policy, planned_maintenance, service_account, rule, dashboard — all declared in `skaff.yml` and generated end-to-end.
 
-If a resource *can't* map field-for-field, that is **not** a convertor to hand-write — it's a **schema gap to fix upstream** (SigNoz-side patterns below). skaff won't emit a usable convertor, and hand-writing one would just paper over a wrong schema. See [`convertors.md`](convertors.md).
+If a resource *can't* map field-for-field, that is **not** a convertor to hand-write — it's a **schema gap to fix upstream** (server-side patterns below; fix in `fuseone-io/fusescope`). skaff won't emit a usable convertor, and hand-writing one would just paper over a wrong schema. See [`convertors.md`](convertors.md).
 
 - **CRUD response-shape.** POST/PUT may return the full object, a partial `{id}`, or `204` — and the spec isn't always faithful to which. The generated shell defaults to a follow-up **GET** (POST→GET, PUT→GET) so state always lands via one Flatten path. **Example:** `rule`'s PUT returns `204`, so Update re-reads via GET.
 
@@ -41,7 +41,7 @@ A `map[string]Obj` on the wire.
 
 The spec *does* express a constraint — a `oneOf` discriminator, an update-less field — but the generated schema doesn't, because skaff injects constraints in post-processing passes and each pass hand-rolls its own incomplete walk of the attribute tree.
 
-- **Pitfall:** invalid config passes `terraform plan` and only fails at apply, with a server error that points somewhere else entirely. An empty variant block serialises as `"spec": null` and SigNoz answers `invalid signal ""` — which reads like a missing-serialisation bug in the provider and isn't (issue #154); setting *two* variants also plans clean and silently drops one.
+- **Pitfall:** invalid config passes `terraform plan` and only fails at apply, with a server error that points somewhere else entirely. An empty variant block serialises as `"spec": null` and FuseScope answers `invalid signal ""` — which reads like a missing-serialisation bug in the provider and isn't (issue #154); setting *two* variants also plans clean and silently drops one.
 - **Spot it:** compare constraint presence for the *same* shape across two resources' generated schemas. A difference means the walk, not the spec — check whether the shape sits under a container the pass doesn't descend into.
 - **Fix:** in skaff, one shared traversal per pass, recursing independently of the attach, and dedup at every append site. Fixed for `oneOf` validators in skaff v0.0.2 (`SigNoz/skaff#14`): `nestedContainer` now handles map/set nesting, so unions under a `MapNestedAttribute` are reachable, and the four append sites dedup identical rewrites — two components share the builder-query discriminator mapping, which previously produced a doubled validator in the rule schema.
 - **Still open — same class:** `injectRequiresReplace` doesn't recurse and runs only for update-less resources, so per-field immutability is never expressed and a `signoz_saved_view` rename fails only at apply (#149).
@@ -49,7 +49,7 @@ The spec *does* express a constraint — a `oneOf` discriminator, an update-less
 
 ---
 
-## SigNoz-side patterns — schema shapes that need an upstream fix
+## Server-side patterns — schema shapes that need a fix in `fuseone-io/fusescope`
 
 Fix in the Go source that generates `docs/api/openapi.yml`, **not** in skaff, so the fix is permanent. The schema-shaping tools, roughly in order of reach: `required:"true"` / `nullable:"true"` struct tags · `Enum() []any` · `JSONSchema()` (the `jsonschema.Exposer` interface) · `JSONSchemaOneOf()` + `PrepareJSONSchema()` with the `x-signoz-discriminator` extension.
 

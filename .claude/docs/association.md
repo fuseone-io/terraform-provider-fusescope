@@ -1,8 +1,8 @@
 # Association
 
-Some SigNoz endpoints model a **link between two existing objects** rather than a standalone object with its own lifecycle — `service_account_role` (role ↔ service account) and `user_role` (role ↔ user). These are association / membership resources (the Terraform analogue of `aws_iam_role_policy_attachment`).
+Some FuseScope endpoints model a **link between two existing objects** rather than a standalone object with its own lifecycle — `service_account_role` (role ↔ service account) and `user_role` (role ↔ user). These are association / membership resources (the Terraform analogue of `aws_iam_role_policy_attachment`).
 
-skaff can't generate a usable resource for the *current* API shape. The fix is **not** to hand-write it or change skaff — it's to **model the association as a first-class resource in the SigNoz API** (new endpoints) so skaff maps it field-for-field like any other Pattern-A resource.
+skaff can't generate a usable resource for the *current* API shape. The fix is **not** to hand-write it or change skaff — it's to **model the association as a first-class resource in the FuseScope API** (new endpoints) so skaff maps it field-for-field like any other Pattern-A resource.
 
 ## Why skaff can't map it — identity lives in path params
 
@@ -20,9 +20,9 @@ skaff (via `tfplugingen-openapi`) builds the Terraform model from the **create r
 
 None of this is Pattern A (one object, one self-`id`, single-object GET, full CRUD), so the identity a Terraform resource needs simply isn't in the parts of the spec skaff reads.
 
-## The fix — give the association its own endpoints in SigNoz
+## The fix — give the association its own endpoints in FuseScope
 
-Model the association as a **standalone resource** in the SigNoz API, so its identity and CRUD live in the request/response body (what skaff maps) instead of in path parameters. Add endpoints of the form:
+Model the association as a **standalone resource** in the FuseScope API, so its identity and CRUD live in the request/response body (what skaff maps) instead of in path parameters. Add endpoints of the form:
 
 - `POST /api/v1/<association>` — body carries both foreign keys (e.g. `{ service_account_id, role_id }`) and returns the created object `{ id, … }`.
 - `GET /api/v1/<association>/{id}` — returns the single object by its own id.
