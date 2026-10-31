@@ -28,11 +28,11 @@ func (d *authDoer) Do(req *http.Request) (*http.Response, error) {
 		req.Header.Set("User-Agent", d.userAgent)
 	}
 
-	tflog.Debug(req.Context(), "signoz api request", map[string]any{"method": req.Method, "url": req.URL.String()})
+	tflog.Debug(req.Context(), "fusescope api request", map[string]any{"method": req.Method, "url": req.URL.String()})
 
 	resp, err := d.inner.Do(req)
 	if resp != nil {
-		tflog.Debug(req.Context(), "signoz api response", map[string]any{
+		tflog.Debug(req.Context(), "fusescope api response", map[string]any{
 			"method":      req.Method,
 			"url":         req.URL.String(),
 			"status_code": resp.StatusCode,

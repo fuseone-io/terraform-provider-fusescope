@@ -32,15 +32,15 @@ func ErrorFromResponse(resp *http.Response, body []byte) *APIError {
 func (e *APIError) Error() string {
 	if e.Render != nil {
 		if pretty, err := json.MarshalIndent(e.Render, "", "  "); err == nil {
-			return fmt.Sprintf("signoz api: HTTP %d\n%s", e.StatusCode, pretty)
+			return fmt.Sprintf("fusescope api: HTTP %d\n%s", e.StatusCode, pretty)
 		}
 	}
 
 	if e.Raw != "" {
-		return fmt.Sprintf("signoz api: HTTP %d: %s", e.StatusCode, e.Raw)
+		return fmt.Sprintf("fusescope api: HTTP %d: %s", e.StatusCode, e.Raw)
 	}
 
-	return fmt.Sprintf("signoz api: HTTP %d", e.StatusCode)
+	return fmt.Sprintf("fusescope api: HTTP %d", e.StatusCode)
 }
 
 func decodeError(status int, raw []byte) *APIError {
