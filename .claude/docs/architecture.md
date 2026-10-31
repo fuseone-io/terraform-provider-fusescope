@@ -1,6 +1,6 @@
 # Architecture
 
-The provider is **generated, not hand-written**: skaff reads the SigNoz OpenAPI spec + `skaff.yml` and emits the `internal/**` tree. This is the pipeline overview; each deep topic has its own doc (linked at the bottom).
+The provider is **generated, not hand-written**: skaff reads the FuseScope OpenAPI spec + `skaff.yml` and emits the `internal/**` tree. This is the pipeline overview; each deep topic has its own doc (linked at the bottom).
 
 ## Why codegen and skaff?
 

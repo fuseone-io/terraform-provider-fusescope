@@ -4,7 +4,7 @@ Whether the provider should keep `created_at` / `updated_at` / `created_by` / `u
 
 ## Problem
 
-SigNoz API responses carry server-set audit fields. If they land in resource state they cause **perpetual plan drift**: `updated_at` changes on every API touch, and auditor identity (`*_by`) is meaningless for IaC (the principal running Terraform is the author by definition).
+FuseScope API responses carry server-set audit fields. If they land in resource state they cause **perpetual plan drift**: `updated_at` changes on every API touch, and auditor identity (`*_by`) is meaningless for IaC (the principal running Terraform is the author by definition).
 
 ## What we decided, and why
 

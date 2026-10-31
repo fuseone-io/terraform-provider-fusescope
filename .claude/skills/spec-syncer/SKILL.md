@@ -1,89 +1,51 @@
 ---
 name: spec-syncer
 description: >-
-  Re-run the full skaff codegen pipeline against the latest upstream SigNoz OpenAPI spec to catch up on spec drift, then open a PR with the regenerated code + docs. Use this when the task is "the upstream openapi spec changed", "regenerate the provider from the latest spec", "sync the generated code to  SigNoz/signoz main", "pick up the new spec", or a periodic spec-drift catch-up. This regenerates **every already-declared** resource — it does NOT add a new one (use resource-creator for that) and makes **no** `skaff.yml` edits.
+  Catch up on drift in the FuseScope OpenAPI spec for every already-declared resource. Use this when the task is "the openapi spec changed", "regenerate the provider from the latest spec", "sync the generated code to fuseone-io/fusescope main", "pick up the new spec", or a periodic spec-drift catch-up. It does NOT add a new resource (use resource-creator for that) and makes **no** `skaff.yml` edits.
 ---
 
-# Sync generated code to the upstream OpenAPI spec
+# Sync generated code to the FuseScope OpenAPI spec
 
-The upstream spec (`SigNoz/signoz` `main` → `docs/api/openapi.yml`) changes often. This provider tracks it: periodically regenerate everything from the current spec and land the drift as a **catch-up PR**. This is `resource-creator` minus Step 1 (declare) and Step 3 (register) — same pipeline, no `skaff.yml` change, all declared resources at once.
+The spec lives in `fuseone-io/fusescope` (`main` → `docs/api/openapi.yml`). This provider tracks it: periodically regenerate everything from the current spec and land the drift as a **catch-up PR**.
 
-## Prerequisites
-
-skaff runs through primus via the skaff-runner script — see the [skaff-runner](../skaff-runner/SKILL.md) and [primus-setter](../primus-setter/SKILL.md) skills. Set:
-
-```sh
-WT=<abs path to this repo>
-MOD=github.com/SigNoz/terraform-provider-signoz
-```
+> **Blocked:** regeneration needs `skaff`, which is private to SigNoz and not available to this fork. Until a replacement generator is chosen, do Steps 1–2 only: measure the drift and record it in an issue in `fuseone-io/terraform-provider-fusescope`. Follow the `generated-code` rule for anything that cannot wait.
 
 ## Steps
 
-### 1. Fetch the current spec + record its commit
-
-Fetch the spec to `tmp/spec/openapi.yml` (see the **resource-creator** skill's Inputs for the `curl` and the not-plain-`main` merged-spec case).
+### 1. Fetch the current spec and record its commit
 
 ```sh
 mkdir -p tmp/spec
-
-# capture the upstream commit for the PR body (reproducibility)
-SPEC_SHA=$(gh api "repos/SigNoz/signoz/commits?path=docs/api/openapi.yml&per_page=1" --jq '.[0].sha')
-echo "regenerating against SigNoz/signoz@$SPEC_SHA"
+curl -fsSL https://raw.githubusercontent.com/fuseone-io/fusescope/main/docs/api/openapi.yml -o tmp/spec/openapi.yml
+SPEC_SHA=$(gh api "repos/fuseone-io/fusescope/commits?path=docs/api/openapi.yml&per_page=1" --jq '.[0].sha')
+echo "spec at fuseone-io/fusescope@$SPEC_SHA"
 ```
 
-### 2. Branch
+### 2. Measure the drift
+
+For each resource declared in `skaff.yml`, compare its request and response schemas in the spec with the generated models under `internal/`. Note added, removed or retyped fields and changed enum values; that list is the body of the issue (or, once regeneration works, of the PR).
+
+### 3. Regenerate (blocked)
+
+When a generator is available: branch `chore/spec-sync-<date>`, regenerate every declared resource without touching `skaff.yml`, then run `go mod tidy` only if `go.mod` changed.
+
+A wholesale regen legitimately pulls in unrelated drift (a shared schema gains a field). That is catch-up. A generated file **disappearing**, a resource's schema emptying out, or a schema the generator now skips is a breakage: stop and diagnose it against [`patterns.md`](../../docs/patterns.md) instead of committing a partial regen.
+
+### 4. Gates, docs, commit
+
+Run the [`go-checks`](../../rules/go-checks.md) rule, then the **docs-writer** skill. One catch-up commit with the regenerated code and docs:
 
 ```sh
-git switch -c chore/spec-sync-$(date +%Y%m%d)
+git commit -am "chore(codegen): sync generated code to the FuseScope openapi spec
+
+Regenerated against fuseone-io/fusescope@$SPEC_SHA."
 ```
 
-### 3. Run the full pipeline
+### 5. Open the PR — confirm first
 
-Run the **skaff-runner** script against the spec you fetched — it runs every step in the required order deterministically. Do **not** edit `skaff.yml`:
-
-```sh
-bash .claude/skills/skaff-runner/scripts/run-pipeline.sh tmp/spec/openapi.yml
-```
-
-The **skaff-runner** skill owns the `skipped 0` gate. The spec-sync twist: **if a schema that used to generate now `skipped`s**, the upstream spec drift broke a mapping — a schema gap, not a normal catch-up. **Stop, do not commit a partial regen.** Diagnose and surface it as per the known patterns in [.claude/docs/patterns.md](../../docs/patterns.md).
-
-### 4. Dependencies (only if changed)
-
-```sh
-go mod tidy && go mod vendor   # ONLY if the regen changed go.mod
-```
-
-### 5. Gates
-
-Run the Go gates — see the [`go-checks`](../../rules/go-checks.md) rule.
-
-### 6. Regenerate docs
-
-Run the **docs-writer** skill.
-
-### 7. Review the diff — expected vs broken
-
-A wholesale regen legitimately pulls in **unrelated** spec drift (e.g. a shared schema like `RenderError` gains/loses a field). That is the *point* — the provider tracks the current spec; commit it as catch-up.
-
-Sanity-check the diff is a *catch-up*, not a *breakage*:
-- ✅ field additions/removals on schemas, changed enum values, doc re-renders
-- ❌ a `zz_generated_*` file **disappearing**, a resource's schema emptying out, or a new `skipped` — those mean a mapping broke (go to Step 3's stop rule)
-
-### 8. Commit
-
-One catch-up commit (regen output + regenerated docs together):
-
-```sh
-git commit -am "chore(codegen): sync generated code to upstream openapi spec
-
-Regenerated against SigNoz/signoz@$SPEC_SHA."
-```
-
-### 9. Open the PR — confirm first
-
-Opening a PR is outward-facing: **summarize the drift and confirm with the user before `gh pr create`.** Record `SigNoz/signoz@<sha>` and any notable drift in the PR body. Follow the [`pull-requests`](../../rules/pull-requests.md) rule for the template and attribution.
+Summarize the drift and **confirm with the user before `gh pr create`**. Record `fuseone-io/fusescope@<sha>` in the PR body and follow the [`pull-requests`](../../rules/pull-requests.md) rule.
 
 ## Not this skill
 
-- Adding a new `signoz_<name>` → **resource-creator** (declares in `skaff.yml`, registers in the provider).
+- Adding a new resource → **resource-creator**.
 - A dependency bump unrelated to the spec → a plain `build(deps)` PR.
