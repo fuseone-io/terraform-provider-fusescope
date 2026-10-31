@@ -1,0 +1,16 @@
+{
+  "resource": {
+    "fusescope_rum_application": {
+      "web": {
+        "name": "testdata-rum-web",
+        "platform": "web",
+        "environment": "test",
+        "allowed_origins": ["https://shop.example.com"],
+        "sample_rate": 0.5,
+        "pii_policy": {
+          "query_allowlist": ["page"]
+        }
+      }
+    }
+  }
+}

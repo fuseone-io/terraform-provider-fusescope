@@ -1,0 +1,4 @@
+[
+  { "op": "remove", "path": "/pii_policy" },
+  { "op": "remove", "path": "/allowed_origins" }
+]
