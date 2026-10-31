@@ -12,6 +12,8 @@ RESOURCE_FILES = sorted((EXAMPLES / "resources").glob("fusescope_*/*.tf"))
 # run surfaced provider/API issues for these.
 SKIPPED = {
     "fusescope_planned_maintenance/resource.tf": "alert_ids reference non-existent rules (API 500)",
+    "fusescope_service_account_role/resource.tf": "needs a managed role ID (var.viewer_role_id); FuseScope has no custom roles",
+    "fusescope_user_role/resource.tf": "needs a managed role ID (var.viewer_role_id); FuseScope has no custom roles",
 }
 
 

@@ -134,7 +134,6 @@ func (p *fusescopeProvider) Resources(_ context.Context) []func() resource.Resou
 		services.NewDashboardResource,
 		services.NewNotificationChannelResource,
 		services.NewPlannedMaintenanceResource,
-		services.NewRoleResource,
 		services.NewRoutePolicyResource,
 		services.NewRuleResource,
 		services.NewSavedViewResource,
