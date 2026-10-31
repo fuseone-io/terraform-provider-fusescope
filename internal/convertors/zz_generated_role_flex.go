@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/fuseone-io/terraform-provider-fusescope/internal/apitypes"
-	"github.com/fuseone-io/terraform-provider-fusescope/internal/convtypes"
 	"github.com/fuseone-io/terraform-provider-fusescope/internal/schemas"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -13,38 +12,6 @@ import (
 
 // Keeps the types import used even when no Flatten field references it directly.
 var _ = types.StringNull
-
-func ExpandAuthtypesPostableRole(ctx context.Context, m schemas.RoleModel) (*apitypes.AuthtypesPostableRole, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	transactionGroups, d := ExpandAuthtypesTransactionGroupList(ctx, m.TransactionGroups)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-	return &apitypes.AuthtypesPostableRole{
-		Description:       convtypes.StringPointer(m.Description),
-		Name:              m.Name.ValueString(),
-		TransactionGroups: transactionGroups,
-	}, diags
-}
-
-func ExpandAuthtypesUpdatableRole(ctx context.Context, m schemas.RoleModel) (*apitypes.AuthtypesUpdatableRole, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	transactionGroups, d := ExpandAuthtypesTransactionGroupList(ctx, m.TransactionGroups)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-	out := &apitypes.AuthtypesUpdatableRole{
-		Description: m.Description.ValueString(),
-	}
-	if transactionGroups != nil {
-		out.TransactionGroups = *transactionGroups
-	}
-	return out, diags
-}
 
 func FlattenAuthtypesRole(ctx context.Context, g *apitypes.AuthtypesRole) (*schemas.RoleDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
