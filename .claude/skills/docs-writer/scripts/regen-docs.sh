@@ -44,6 +44,6 @@ else
 fi
 
 echo ">> tfplugindocs validate"
-go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate -provider-name signoz
+go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate -provider-name fusescope
 
 echo ">> docs regenerated and validated."

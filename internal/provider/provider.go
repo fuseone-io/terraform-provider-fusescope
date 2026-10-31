@@ -17,21 +17,21 @@ import (
 )
 
 const (
-	envEndpoint     = "SIGNOZ_ENDPOINT"
-	envAccessToken  = "SIGNOZ_ACCESS_TOKEN"
-	envHTTPMaxRetry = "SIGNOZ_HTTP_MAX_RETRY"
-	envHTTPTimeout  = "SIGNOZ_HTTP_TIMEOUT"
+	envEndpoint     = "FUSESCOPE_ENDPOINT"
+	envAccessToken  = "FUSESCOPE_ACCESS_TOKEN"
+	envHTTPMaxRetry = "FUSESCOPE_HTTP_MAX_RETRY"
+	envHTTPTimeout  = "FUSESCOPE_HTTP_TIMEOUT"
 )
 
-var _ provider.Provider = (*signozProvider)(nil)
+var _ provider.Provider = (*fusescopeProvider)(nil)
 
-type signozProvider struct {
+type fusescopeProvider struct {
 	name           string
 	terraformAgent string
 	version        string
 }
 
-type signozProviderModel struct {
+type fusescopeProviderModel struct {
 	AccessToken  types.String `tfsdk:"access_token"`
 	Endpoint     types.String `tfsdk:"endpoint"`
 	HTTPMaxRetry types.Int64  `tfsdk:"http_max_retry"`
@@ -41,26 +41,26 @@ type signozProviderModel struct {
 // New returns the framework provider constructor used by `main.go`.
 func New(terraformAgent, version, name string) func() provider.Provider {
 	return func() provider.Provider {
-		return &signozProvider{terraformAgent: terraformAgent, version: version, name: name}
+		return &fusescopeProvider{terraformAgent: terraformAgent, version: version, name: name}
 	}
 }
 
-func (p *signozProvider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *fusescopeProvider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = p.name
 	resp.Version = p.version
 }
 
-func (p *signozProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *fusescopeProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "SigNoz API access token. Read from " + envAccessToken + " when unset.",
+				Description: "FuseScope API access token. Read from " + envAccessToken + " when unset.",
 			},
 			"endpoint": schema.StringAttribute{
 				Optional:    true,
-				Description: "SigNoz API endpoint URL. Defaults to " + apiclients.DefaultEndpoint + " or " + envEndpoint + ".",
+				Description: "FuseScope API endpoint URL. Defaults to " + apiclients.DefaultEndpoint + " or " + envEndpoint + ".",
 			},
 			"http_max_retry": schema.Int64Attribute{
 				Optional:    true,
@@ -74,8 +74,8 @@ func (p *signozProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 	}
 }
 
-func (p *signozProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var cfg signozProviderModel
+func (p *fusescopeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	var cfg fusescopeProviderModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -86,7 +86,7 @@ func (p *signozProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if token == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("access_token"),
-			"Missing SigNoz access token",
+			"Missing FuseScope access token",
 			"Set provider.access_token, or the "+envAccessToken+" env var.",
 		)
 		return
@@ -120,7 +120,7 @@ func (p *signozProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	c, err := apiclients.New(endpoint, token, p.terraformAgent, p.version, timeout, retryMax)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to create SigNoz client", err.Error())
+		resp.Diagnostics.AddError("Failed to create FuseScope client", err.Error())
 		return
 	}
 
@@ -128,7 +128,7 @@ func (p *signozProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	resp.DataSourceData = c
 }
 
-func (p *signozProvider) Resources(_ context.Context) []func() resource.Resource {
+func (p *fusescopeProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		services.NewAuthDomainResource,
 		services.NewDashboardResource,
@@ -145,7 +145,7 @@ func (p *signozProvider) Resources(_ context.Context) []func() resource.Resource
 	}
 }
 
-func (p *signozProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+func (p *fusescopeProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		services.NewAuthDomainDataSource,
 		services.NewDashboardDataSource,

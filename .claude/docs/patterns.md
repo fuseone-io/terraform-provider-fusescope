@@ -44,7 +44,7 @@ The spec *does* express a constraint — a `oneOf` discriminator, an update-less
 - **Pitfall:** invalid config passes `terraform plan` and only fails at apply, with a server error that points somewhere else entirely. An empty variant block serialises as `"spec": null` and FuseScope answers `invalid signal ""` — which reads like a missing-serialisation bug in the provider and isn't (issue #154); setting *two* variants also plans clean and silently drops one.
 - **Spot it:** compare constraint presence for the *same* shape across two resources' generated schemas. A difference means the walk, not the spec — check whether the shape sits under a container the pass doesn't descend into.
 - **Fix:** in skaff, one shared traversal per pass, recursing independently of the attach, and dedup at every append site. Fixed for `oneOf` validators in skaff v0.0.2 (`SigNoz/skaff#14`): `nestedContainer` now handles map/set nesting, so unions under a `MapNestedAttribute` are reachable, and the four append sites dedup identical rewrites — two components share the builder-query discriminator mapping, which previously produced a doubled validator in the rule schema.
-- **Still open — same class:** `injectRequiresReplace` doesn't recurse and runs only for update-less resources, so per-field immutability is never expressed and a `signoz_saved_view` rename fails only at apply (#149).
+- **Still open — same class:** `injectRequiresReplace` doesn't recurse and runs only for update-less resources, so per-field immutability is never expressed and a `fusescope_saved_view` rename fails only at apply (#149).
 - **Example:** the five unions under dashboard `spec.panels` — the panel plugin, the query plugin, two `builder_query.spec` sites and the query spec — had no `ExactlyOneNestedAttribute` until the v0.0.2 regen, while dashboard layouts and both variable unions were guarded all along. `spec.panels` is the schema's only `MapNestedAttribute`, and it is in the ancestry of exactly the unguarded five.
 
 ---
@@ -107,7 +107,7 @@ A `*float64` Go field emits bare `{type: number}` with **no `format`** (swaggest
 
 - **Pitfall:** oapi-codegen maps bare `number` → `float32`, so `target = 0.8` round-trips to `0.800000011920929` and apply fails: *"produced an unexpected new value: … was cty…(\"0.8\"), but now …(0.800000011920929)"*.
 - **Fix:** add a `` `format:"double"` `` struct tag → `float64` everywhere.
-- **Example:** `signoz_rule` `condition.thresholds.basic.spec[].{target,recoveryTarget}` and `condition.target` (signoz#12061).
+- **Example:** `fusescope_rule` `condition.thresholds.basic.spec[].{target,recoveryTarget}` and `condition.target` (signoz#12061).
 
 ### Scalar-or-array union whose arm is inferred from emptiness
 
@@ -115,7 +115,7 @@ A `oneOf [string, array<string>]` whose marshaller takes the scalar arm only whi
 
 - **Pitfall:** an explicit empty scalar is accepted on write (201) and then absent from the read, so apply fails: *"Provider produced inconsistent result after apply … was cty.StringVal(\"\\\"\\\"\"), but now null"* — and the resource is left created on the server.
 - **Fix:** record which arm was set instead of inferring it from emptiness, so an empty string round-trips; failing that, reject an empty scalar on write so the caller gets a clean 400.
-- **Example:** `signoz_dashboard` `spec.variables[].list_variable.spec.default_value` — `jsonencode("")` writes but never reads back, while `jsonencode("prod")` and every array form round-trip (#155).
+- **Example:** `fusescope_dashboard` `spec.variables[].list_variable.spec.default_value` — `jsonencode("")` writes but never reads back, while `jsonencode("prod")` and every array form round-trip (#155).
 
 ### Association via path params
 

@@ -19,9 +19,9 @@ var (
 )
 
 const (
-	registry       = "registry.terraform.io/signoz/signoz"
+	registry       = "registry.terraform.io/fuseone-io/fusescope"
 	terraformAgent = "terraform"
-	name           = "signoz"
+	name           = "fusescope"
 )
 
 func main() {

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	// DefaultEndpoint is the SigNoz API URL used when none is configured.
+	// DefaultEndpoint is the FuseScope API URL used when none is configured.
 	DefaultEndpoint = "http://localhost:8080"
 
 	// DefaultTimeout is the per-request HTTP timeout used when none is configured.
@@ -27,7 +27,7 @@ const (
 	apiKeyHeader = "SIGNOZ-API-KEY"
 )
 
-// WrappedClient wraps the oapi-codegen-generated client with SigNoz auth, a heimdall retrier, and User-Agent stamping, wired once at provider configure
+// WrappedClient wraps the oapi-codegen-generated client with FuseScope API-key auth, a heimdall retrier, and User-Agent stamping, wired once at provider configure
 // time. Service code calls the generated methods via `.Gen` (e.g. `r.api.Gen.GetRoutePolicyByIDWithResponse(ctx, id)`).
 type WrappedClient struct {
 	Gen *ClientWithResponses

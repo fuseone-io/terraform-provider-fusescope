@@ -232,7 +232,7 @@ wheels = [
 ]
 
 [[package]]
-name = "terraform-provider-signoz-tests"
+name = "terraform-provider-fusescope-tests"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

@@ -8,4 +8,4 @@ package main
 //go:generate terraform fmt -recursive ./examples/
 
 // Regenerate docs/ from the provider schema, templates/, and examples/.
-//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate -provider-name signoz -rendered-provider-name SigNoz
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate -provider-name fusescope -rendered-provider-name FuseScope

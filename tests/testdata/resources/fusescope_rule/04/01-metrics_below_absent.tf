@@ -1,0 +1,98 @@
+# Metric rule with the `below` operator, `on_average` match type, `table` panel, and absent-data alerting.
+resource "fusescope_notification_channel" "slack" {
+  name         = "slack-scenario-04"
+  display_name = "slack-scenario-04"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "scenario_04" {
+  alert      = "testdata-metrics-below-absent"
+  alert_type = "METRIC_BASED_ALERT"
+  rule_type  = "threshold_rule"
+
+  condition = {
+    alert_on_absent = true
+    absent_for      = 5
+
+    composite_query = {
+      panel_type = "table"
+      query_type = "builder"
+      unit       = "percent"
+
+      queries = [
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              metrics = {
+                name   = "A"
+                signal = "metrics"
+
+                aggregations = [
+                  {
+                    metric_name       = "system.memory.utilization"
+                    space_aggregation = "avg"
+                    time_aggregation  = "avg"
+                  }
+                ]
+
+                filter = {
+                  expression = "state = 'free'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            channels   = [fusescope_notification_channel.slack.display_name]
+            match_type = "on_average"
+            name       = "low free memory"
+            op         = "below"
+            target     = 10
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "10m"
+        frequency   = "5m"
+      }
+    }
+  }
+
+  notification_settings = {
+    group_by             = ["service.name"]
+    new_group_eval_delay = "5m"
+
+    renotify = {
+      enabled      = true
+      interval     = "1h"
+      alert_states = ["firing"]
+    }
+  }
+
+  schema_version = "v2alpha1"
+}

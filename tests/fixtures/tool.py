@@ -7,33 +7,33 @@ from pathlib import Path
 import pytest
 
 from fixtures.logger import setup_logger
-from fixtures.signoz import SigNoz
+from fixtures.fusescope import FuseScope
 
 logger = setup_logger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = REPO_ROOT / "examples"
 # Edge-case configs that exercise the provider beyond the user-facing examples;
-# same layout as examples/ (resources/signoz_<name>/*.tf).
+# same layout as examples/ (resources/fusescope_<name>/*.tf).
 TESTDATA = REPO_ROOT / "tests" / "testdata"
 
 # Provider source address, left unqualified on purpose: each CLI normalizes it
 # against its own default registry host, so the same string matches the
 # dev_overrides key under both Terraform and OpenTofu.
-PROVIDER_SOURCE = "signoz/signoz"
+PROVIDER_SOURCE = "fuseone-io/fusescope"
 
-# Written into each workspace so the CLI resolves signoz_* resources to the
+# Written into each workspace so the CLI resolves fusescope_* resources to the
 # dev-overridden provider; the provider reads endpoint/token from the env.
 VERSIONS_TF = f"""\
 terraform {{
   required_providers {{
-    signoz = {{
+    fusescope = {{
       source = "{PROVIDER_SOURCE}"
     }}
   }}
 }}
 
-provider "signoz" {{}}
+provider "fusescope" {{}}
 """
 
 
@@ -42,7 +42,7 @@ def provider_dir(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPa
     """Build the provider binary into a directory for Terraform dev_overrides."""
     go = request.config.getoption("--go-binary-path")
     out = tmp_path_factory.mktemp("provider-bin")
-    binary = out / "terraform-provider-signoz"
+    binary = out / "terraform-provider-fusescope"
 
     logger.info("building provider with %s -> %s", go, binary)
     subprocess.run([go, "build", "-o", str(binary), "."], cwd=REPO_ROOT, check=True)
@@ -76,15 +76,15 @@ def workspace(tmp_path_factory: pytest.TempPathFactory) -> Callable[[Path], Path
 class Tool:
     """Runs a Terraform-compatible CLI in a workspace against the dev-override provider."""
 
-    def __init__(self, workdir: Path, cli_config: Path, signoz: SigNoz, binary: str = "terraform"):
+    def __init__(self, workdir: Path, cli_config: Path, fusescope: FuseScope, binary: str = "terraform"):
         self.workdir = workdir
         self.binary = binary
         self.env = {
             **os.environ,
             "TF_CLI_CONFIG_FILE": str(cli_config),
             "TF_IN_AUTOMATION": "1",
-            "SIGNOZ_ENDPOINT": signoz.endpoint,
-            "SIGNOZ_ACCESS_TOKEN": signoz.access_token,
+            "FUSESCOPE_ENDPOINT": fusescope.endpoint,
+            "FUSESCOPE_ACCESS_TOKEN": fusescope.access_token,
         }
 
     def _run(self, *args: str) -> subprocess.CompletedProcess:
