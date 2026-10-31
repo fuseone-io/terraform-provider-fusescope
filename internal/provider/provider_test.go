@@ -53,6 +53,7 @@ func TestProviderRegistersTypes(t *testing.T) {
 	}{
 		{name: "rum application resource", registered: resources, want: "fusescope_rum_application"},
 		{name: "rum application data source", registered: dataSources, want: "fusescope_rum_application"},
+		{name: "public dashboard resource", registered: resources, want: "fusescope_public_dashboard"},
 		{name: "role resource is not offered", registered: resources, want: ""},
 	}
 
