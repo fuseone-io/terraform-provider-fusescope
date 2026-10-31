@@ -156,6 +156,198 @@ resource "fusescope_rule" "pod_cpu" {
 ```
 
 ```terraform
+# Exceptions-based rules query the exceptions table with ClickHouse SQL. The
+# query must return `value` and `interval` columns; other columns become labels.
+resource "fusescope_notification_channel" "exceptions" {
+  name         = "webhook-exceptions"
+  display_name = "webhook-exceptions"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-exceptions"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "exceptions" {
+  alert      = "Exceptions per service"
+  alert_type = "EXCEPTIONS_BASED_ALERT"
+  rule_type  = "threshold_rule"
+
+  annotations = {
+    summary     = "{{$serviceName}} raised {{$value}} {{$exceptionType}} exceptions"
+    description = "{{$serviceName}} raised {{$value}} {{$exceptionType}} exceptions in the last 5 minutes (threshold {{$threshold}})."
+  }
+
+  condition = {
+    composite_query = {
+      panel_type = "graph"
+      query_type = "clickhouse_sql"
+
+      queries = [
+        {
+          clickhouse_sql = {
+            type = "clickhouse_sql"
+            spec = {
+              name  = "A"
+              query = <<-EOT
+                SELECT
+                  toStartOfInterval(timestamp, toIntervalMinute(1)) AS interval,
+                  serviceName,
+                  exceptionType,
+                  toFloat64(count()) AS value
+                FROM signoz_traces.distributed_signoz_error_index_v2
+                WHERE timestamp BETWEEN {{.start_datetime}} AND {{.end_datetime}}
+                GROUP BY serviceName, exceptionType, interval
+              EOT
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            name       = "warning"
+            op         = "above"
+            match_type = "in_total"
+            target     = 10
+            channels   = [fusescope_notification_channel.exceptions.display_name]
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "5m"
+        frequency   = "1m"
+      }
+    }
+  }
+
+  notification_settings = {
+    group_by = ["serviceName", "exceptionType"]
+  }
+
+  schema_version = "v2alpha1"
+}
+```
+
+```terraform
+resource "fusescope_notification_channel" "logs" {
+  name         = "webhook-logs"
+  display_name = "webhook-logs"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-logs"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "error_logs" {
+  alert      = "Error logs per service"
+  alert_type = "LOGS_BASED_ALERT"
+  rule_type  = "threshold_rule"
+
+  annotations = {
+    summary     = "{{$service.name}} logged {{$value}} errors in 5m"
+    description = "{{$service.name}} in {{$deployment.environment}} logged {{$value}} ERROR/FATAL lines in the last 5 minutes (threshold {{$threshold}})."
+  }
+
+  condition = {
+    composite_query = {
+      panel_type = "graph"
+      query_type = "builder"
+
+      queries = [
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              logs = {
+                name   = "A"
+                signal = "logs"
+
+                aggregations = [
+                  { expression = "count()" }
+                ]
+
+                filter = {
+                  expression = "severity_text IN ('ERROR', 'FATAL')"
+                }
+
+                group_by = [
+                  {
+                    name          = "service.name"
+                    field_context = "resource"
+                  },
+                  {
+                    name          = "deployment.environment"
+                    field_context = "resource"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            name       = "warning"
+            op         = "above"
+            match_type = "in_total"
+            target     = 50
+            channels   = [fusescope_notification_channel.logs.display_name]
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "5m"
+        frequency   = "1m"
+      }
+    }
+  }
+
+  notification_settings = {
+    group_by = ["service.name", "deployment.environment"]
+  }
+
+  schema_version = "v2alpha1"
+}
+```
+
+```terraform
 resource "fusescope_notification_channel" "alerts" {
   name         = "webhook-alerts"
   display_name = "webhook-alerts"
@@ -224,6 +416,477 @@ resource "fusescope_rule" "minimal" {
   }
 
   notification_settings = {}
+}
+```
+
+```terraform
+# Dotted OpenTelemetry names are quoted in PromQL: {"metric.name", "attr.name"="..."}.
+resource "fusescope_notification_channel" "infra" {
+  name         = "webhook-infra"
+  display_name = "webhook-infra"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-infra"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "host_memory" {
+  alert      = "Host memory above 90%"
+  alert_type = "METRIC_BASED_ALERT"
+  rule_type  = "promql_rule"
+
+  annotations = {
+    summary     = "{{$host.name}} memory usage is {{$value}}"
+    description = "Memory used on {{$host.name}} has stayed above {{$threshold}} for 10 minutes."
+  }
+
+  condition = {
+    composite_query = {
+      panel_type = "graph"
+      query_type = "promql"
+      unit       = "percentunit"
+
+      queries = [
+        {
+          promql = {
+            type = "promql"
+            spec = {
+              name  = "A"
+              query = "max by (\"host.name\") ({\"system.memory.utilization\", state=\"used\"})"
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            name       = "critical"
+            op         = "above"
+            match_type = "all_the_times"
+            target     = 0.9
+            channels   = [fusescope_notification_channel.infra.display_name]
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "10m"
+        frequency   = "1m"
+      }
+    }
+  }
+
+  labels = {
+    team = "infra"
+  }
+
+  notification_settings = {
+    group_by = ["host.name"]
+  }
+
+  schema_version = "v2alpha1"
+}
+```
+
+```terraform
+# Annotations are Go templates: {{$value}} and {{$threshold}} are the observed
+# value and the target, {{$<label>}} (e.g. {{$service.name}}) reads an alert label.
+resource "fusescope_notification_channel" "traffic" {
+  name         = "webhook-traffic"
+  display_name = "webhook-traffic"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-traffic"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "traffic_drop" {
+  alert       = "Request rate dropped"
+  alert_type  = "TRACES_BASED_ALERT"
+  rule_type   = "threshold_rule"
+  description = "Server request rate per service fell below the expected floor."
+
+  annotations = {
+    summary     = "{{$service.name}} receives {{$value}} req/s (floor {{$threshold}})"
+    description = <<-EOT
+      Request rate of {{$service.name}} in {{$deployment.environment}} is {{$value}} req/s,
+      below the floor of {{$threshold}} req/s. Check the load balancer and recent deploys.
+    EOT
+    runbook_url = "https://runbooks.example.com/traffic-drop"
+  }
+
+  labels = {
+    team = "checkout"
+  }
+
+  condition = {
+    alert_on_absent = true
+    absent_for      = 15
+
+    composite_query = {
+      panel_type = "graph"
+      query_type = "builder"
+      unit       = "reqps"
+
+      queries = [
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              traces = {
+                name   = "A"
+                signal = "traces"
+
+                aggregations = [
+                  { expression = "rate()" }
+                ]
+
+                filter = {
+                  expression = "kind_string = 'Server' AND service.name = 'checkout'"
+                }
+
+                group_by = [
+                  {
+                    name          = "service.name"
+                    field_context = "resource"
+                  },
+                  {
+                    name          = "deployment.environment"
+                    field_context = "resource"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            name       = "warning"
+            op         = "below"
+            match_type = "all_the_times"
+            target     = 1
+            channels   = [fusescope_notification_channel.traffic.display_name]
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "15m"
+        frequency   = "5m"
+      }
+    }
+  }
+
+  notification_settings = {
+    group_by             = ["service.name", "deployment.environment"]
+    new_group_eval_delay = "10m"
+    renotify = {
+      enabled      = true
+      interval     = "1h"
+      alert_states = ["firing", "nodata"]
+    }
+  }
+
+  schema_version = "v2alpha1"
+}
+```
+
+```terraform
+resource "fusescope_notification_channel" "errors" {
+  name         = "webhook-errors"
+  display_name = "webhook-errors"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-errors"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "error_rate" {
+  alert      = "Error rate per service"
+  alert_type = "TRACES_BASED_ALERT"
+  rule_type  = "threshold_rule"
+
+  annotations = {
+    summary     = "{{$service.name}} error rate is {{$value}}%"
+    description = "{{$value}}% of {{$service.name}} server spans failed (threshold {{$threshold}}%)."
+  }
+
+  condition = {
+    composite_query = {
+      panel_type = "graph"
+      query_type = "builder"
+      unit       = "percent"
+
+      queries = [
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              traces = {
+                name     = "A"
+                signal   = "traces"
+                disabled = true
+
+                aggregations = [
+                  { expression = "count()" }
+                ]
+
+                filter = {
+                  expression = "kind_string = 'Server' AND has_error = true"
+                }
+
+                group_by = [
+                  {
+                    name          = "service.name"
+                    field_context = "resource"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              traces = {
+                name     = "B"
+                signal   = "traces"
+                disabled = true
+
+                aggregations = [
+                  { expression = "count()" }
+                ]
+
+                filter = {
+                  expression = "kind_string = 'Server'"
+                }
+
+                group_by = [
+                  {
+                    name          = "service.name"
+                    field_context = "resource"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          builder_formula = {
+            type = "builder_formula"
+            spec = {
+              name       = "F1"
+              expression = "A * 100 / B"
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "F1"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            name       = "critical"
+            op         = "above"
+            match_type = "on_average"
+            target     = 5
+            channels   = [fusescope_notification_channel.errors.display_name]
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "5m"
+        frequency   = "1m"
+      }
+    }
+  }
+
+  notification_settings = {
+    group_by = ["service.name"]
+  }
+
+  schema_version = "v2alpha1"
+}
+```
+
+```terraform
+# Each threshold notifies its own channels; the threshold name becomes the
+# alert's severity label.
+resource "fusescope_notification_channel" "team" {
+  name         = "webhook-team"
+  display_name = "webhook-team"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-team"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_notification_channel" "oncall" {
+  name         = "webhook-oncall"
+  display_name = "webhook-oncall"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-oncall"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "p99_latency" {
+  alert      = "p99 latency per service"
+  alert_type = "TRACES_BASED_ALERT"
+  rule_type  = "threshold_rule"
+
+  annotations = {
+    summary     = "{{$service.name}} p99 latency is {{$value}}"
+    description = "p99 latency of {{$service.name}} server spans crossed {{$threshold}}."
+  }
+
+  condition = {
+    composite_query = {
+      panel_type = "graph"
+      query_type = "builder"
+      unit       = "ns"
+
+      queries = [
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              traces = {
+                name   = "A"
+                signal = "traces"
+
+                aggregations = [
+                  { expression = "p99(duration_nano)" }
+                ]
+
+                filter = {
+                  expression = "kind_string = 'Server' AND deployment.environment = 'production'"
+                }
+
+                group_by = [
+                  {
+                    name          = "service.name"
+                    field_context = "resource"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+
+    thresholds = {
+      basic = {
+        kind = "basic"
+        spec = [
+          {
+            name            = "warning"
+            op              = "above"
+            match_type      = "on_average"
+            target          = 500
+            target_unit     = "ms"
+            recovery_target = 400
+            channels        = [fusescope_notification_channel.team.display_name]
+          },
+          {
+            name        = "critical"
+            op          = "above"
+            match_type  = "on_average"
+            target      = 1000
+            target_unit = "ms"
+            channels = [
+              fusescope_notification_channel.team.display_name,
+              fusescope_notification_channel.oncall.display_name,
+            ]
+          }
+        ]
+      }
+    }
+  }
+
+  evaluation = {
+    rolling = {
+      kind = "rolling"
+      spec = {
+        eval_window = "10m"
+        frequency   = "1m"
+      }
+    }
+  }
+
+  notification_settings = {
+    group_by = ["service.name"]
+  }
+
+  schema_version = "v2alpha1"
 }
 ```
 
