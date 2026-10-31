@@ -13,6 +13,11 @@ description: |-
 ## Example Usage
 
 ```terraform
+variable "slack_webhook_url" {
+  type      = string
+  sensitive = true
+}
+
 resource "fusescope_notification_channel" "slack_oncall" {
   name         = "oncall-slack"
   display_name = "On-call Slack"
@@ -21,9 +26,137 @@ resource "fusescope_notification_channel" "slack_oncall" {
     slack = {
       kind = "slack"
       spec = {
-        api_url       = "https://example.com/slack-webhook"
+        api_url       = var.slack_webhook_url
         channel       = "#alerts-oncall"
         send_resolved = true
+        title         = "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+        text          = <<-EOT
+          {{ range .Alerts -}}
+          *Summary:* {{ .Annotations.summary }}
+          *Service:* {{ index .Labels "service.name" }}
+          {{ end }}
+        EOT
+      }
+    }
+  }
+}
+```
+
+```terraform
+resource "fusescope_notification_channel" "email_sre" {
+  name         = "sre-email"
+  display_name = "SRE email"
+
+  config = {
+    email = {
+      kind = "email"
+      spec = {
+        to            = "sre@example.com"
+        send_resolved = true
+        headers = {
+          Subject = "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+        }
+      }
+    }
+  }
+}
+```
+
+```terraform
+variable "googlechat_webhook_url" {
+  type      = string
+  sensitive = true
+}
+
+resource "fusescope_notification_channel" "googlechat_platform" {
+  name         = "platform-googlechat"
+  display_name = "Platform Google Chat"
+
+  config = {
+    googlechat = {
+      kind = "googlechat"
+      spec = {
+        webhook_url   = var.googlechat_webhook_url
+        send_resolved = true
+        title         = "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+        text          = "{{ range .Alerts }}*{{ .Annotations.summary }}*\n{{ end }}"
+      }
+    }
+  }
+}
+```
+
+```terraform
+variable "msteams_webhook_url" {
+  type      = string
+  sensitive = true
+}
+
+resource "fusescope_notification_channel" "msteams_platform" {
+  name         = "platform-msteams"
+  display_name = "Platform Teams"
+
+  config = {
+    msteams = {
+      kind = "msteams"
+      spec = {
+        webhook_url   = var.msteams_webhook_url
+        send_resolved = true
+        title         = "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+        text          = "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+      }
+    }
+  }
+}
+```
+
+```terraform
+variable "opsgenie_api_key" {
+  type      = string
+  sensitive = true
+}
+
+resource "fusescope_notification_channel" "opsgenie_oncall" {
+  name         = "oncall-opsgenie"
+  display_name = "On-call Opsgenie"
+
+  config = {
+    opsgenie = {
+      kind = "opsgenie"
+      spec = {
+        api_key       = var.opsgenie_api_key
+        send_resolved = true
+        message       = "{{ .CommonLabels.alertname }}"
+        description   = "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+        priority      = "{{ if eq (index .Alerts 0).Labels.severity \"critical\" }}P1{{ else }}P3{{ end }}"
+      }
+    }
+  }
+}
+```
+
+```terraform
+variable "pagerduty_routing_key" {
+  type      = string
+  sensitive = true
+}
+
+resource "fusescope_notification_channel" "pagerduty_oncall" {
+  name         = "oncall-pagerduty"
+  display_name = "On-call PagerDuty"
+
+  config = {
+    pagerduty = {
+      kind = "pagerduty"
+      spec = {
+        routing_key   = var.pagerduty_routing_key
+        send_resolved = true
+        description   = "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+        severity      = "{{ (index .Alerts 0).Labels.severity }}"
+        client        = "FuseScope"
+        details = {
+          num_firing = "{{ .Alerts.Firing | len }}"
+        }
       }
     }
   }
