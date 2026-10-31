@@ -1,41 +1,40 @@
 ---
-page_title: "SigNoz Provider"
+page_title: "FuseScope Provider"
 description: |-
-  The SigNoz provider manages SigNoz observability resources — alerts, dashboards, and more — with Terraform.
+  The FuseScope provider manages FuseScope observability resources — alert rules, dashboards, notification channels and more — with Terraform.
 ---
 
-# SigNoz Provider
+# FuseScope Provider
 
-[SigNoz](https://signoz.io) is an open-source observability platform for metrics, traces,
-and logs. The SigNoz provider is used to manage the resources supported by SigNoz — such
-as alerts and dashboards — as code, on both SigNoz Cloud and self-hosted deployments.
+[FuseScope](https://github.com/fuseone-io/fusescope) is FuseOne's OpenTelemetry-native
+observability platform for traces, metrics and logs. The FuseScope provider manages its
+resources — alert rules, dashboards, notification channels, users, SSO and more — as code.
 
 Use the navigation to the left to read about the available resources and data sources.
 
 ## Authentication
 
-The provider authenticates with a SigNoz API access token, sent on every request. For
-automation, create a
-[service account](https://signoz.io/docs/manage/administrator-guide/iam/service-accounts/)
-with a role that can manage your resources and use its API key. Provide the token with the
-`access_token` argument or the `SIGNOZ_ACCESS_TOKEN` environment variable - prefer the
-environment variable so the secret stays out of your configuration and state.
+The provider authenticates with a FuseScope API key, sent on every request. For
+automation, create a service account with a role that can manage your resources and use
+its API key. Provide the key with the `access_token` argument or the
+`FUSESCOPE_ACCESS_TOKEN` environment variable — prefer the environment variable so the
+secret stays out of your configuration and state.
 
-Set `endpoint` to the root URL of your SigNoz instance — your SigNoz Cloud region URL, or
-the UI URL of a self-hosted deployment (for example `http://localhost:8080`). It can also
-be set with `SIGNOZ_ENDPOINT`.
+Set `endpoint` to the root URL of your FuseScope instance (for example
+`http://localhost:8080`). It can also be set with `FUSESCOPE_ENDPOINT`.
 
 ## Example Usage
 
 ```terraform
-provider "signoz" {
-  # Root URL of your SigNoz instance: a SigNoz Cloud region URL, or the UI URL of a
-  # self-hosted deployment. Can also be set with the SIGNOZ_ENDPOINT environment variable.
+provider "fusescope" {
+  # Root URL of your FuseScope instance. Can also be set with the
+  # FUSESCOPE_ENDPOINT environment variable.
   endpoint = "http://localhost:8080"
 
-  # API access token with the Admin role. Prefer the SIGNOZ_ACCESS_TOKEN environment
-  # variable to keep the secret out of configuration and state.
-  access_token = var.signoz_access_token
+  # API key of a service account with the Admin role. Prefer the
+  # FUSESCOPE_ACCESS_TOKEN environment variable to keep the secret out of
+  # configuration and state.
+  access_token = var.fusescope_access_token
 }
 ```
 
@@ -44,7 +43,7 @@ provider "signoz" {
 
 ### Optional
 
-- `access_token` (String, Sensitive) SigNoz API access token. Read from SIGNOZ_ACCESS_TOKEN when unset.
-- `endpoint` (String) SigNoz API endpoint URL. Defaults to http://localhost:8080 or SIGNOZ_ENDPOINT.
-- `http_max_retry` (Number) Max HTTP retries on transient failures. Read from SIGNOZ_HTTP_MAX_RETRY when unset.
-- `http_timeout` (String) HTTP request timeout (Go duration, e.g. "35s"). Read from SIGNOZ_HTTP_TIMEOUT when unset.
+- `access_token` (String, Sensitive) FuseScope API access token. Read from FUSESCOPE_ACCESS_TOKEN when unset.
+- `endpoint` (String) FuseScope API endpoint URL. Defaults to http://localhost:8080 or FUSESCOPE_ENDPOINT.
+- `http_max_retry` (Number) Max HTTP retries on transient failures. Read from FUSESCOPE_HTTP_MAX_RETRY when unset.
+- `http_timeout` (String) HTTP request timeout (Go duration, e.g. "35s"). Read from FUSESCOPE_HTTP_TIMEOUT when unset.
