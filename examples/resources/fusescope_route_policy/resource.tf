@@ -1,4 +1,5 @@
-# Route policies reference channels by display name.
+# Route policies reference channels by display name and apply to rules with
+# notification_settings.use_policy = true.
 resource "fusescope_notification_channel" "oncall_slack" {
   name         = "oncall-slack"
   display_name = "oncall-slack"
