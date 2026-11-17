@@ -156,6 +156,93 @@ resource "fusescope_rule" "pod_cpu" {
 ```
 
 ```terraform
+# Anomaly rules use schema_version v1: the condition holds the target, op and
+# match type directly. The target is a z-score from 1 to 7; target_unit is
+# ignored because the score is unitless.
+resource "fusescope_notification_channel" "anomalies" {
+  name         = "webhook-anomalies"
+  display_name = "webhook-anomalies"
+
+  config = {
+    webhook = {
+      kind = "webhook"
+      spec = {
+        url           = "https://example.com/webhook-anomalies"
+        send_resolved = true
+      }
+    }
+  }
+}
+
+resource "fusescope_rule" "request_rate_anomaly" {
+  alert          = "checkout request rate anomaly"
+  alert_type     = "METRIC_BASED_ALERT"
+  rule_type      = "anomaly_rule"
+  schema_version = "v1"
+
+  eval_window        = "10m"
+  frequency          = "1m"
+  preferred_channels = [fusescope_notification_channel.anomalies.display_name]
+
+  condition = {
+    composite_query = {
+      panel_type = "graph"
+      query_type = "builder"
+
+      queries = [
+        {
+          builder_query = {
+            type = "builder_query"
+            spec = {
+              metrics = {
+                name   = "A"
+                signal = "metrics"
+
+                aggregations = [
+                  {
+                    metric_name       = "http.server.request.duration"
+                    time_aggregation  = "rate"
+                    space_aggregation = "sum"
+                  }
+                ]
+
+                # The anomaly function must be the query's last function.
+                functions = [
+                  {
+                    name = "anomaly"
+                    args = [
+                      {
+                        name  = "z_score_threshold"
+                        value = jsonencode(3)
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    selected_query_name = "A"
+    target              = 3
+    op                  = "above"
+    match_type          = "at_least_once"
+    seasonality         = "daily"
+  }
+
+  labels = {
+    severity = "warning"
+  }
+
+  annotations = {
+    summary = "Request rate z-score {{$value}} is above {{$threshold}}"
+  }
+}
+```
+
+```terraform
 # Exceptions-based rules query the exceptions table with ClickHouse SQL. The
 # query must return `value` and `interval` columns; other columns become labels.
 resource "fusescope_notification_channel" "exceptions" {
@@ -898,8 +985,6 @@ resource "fusescope_rule" "p99_latency" {
 - `alert` (String)
 - `alert_type` (String)
 - `condition` (Attributes) (see [below for nested schema](#nestedatt--condition))
-- `evaluation` (Attributes) (see [below for nested schema](#nestedatt--evaluation))
-- `notification_settings` (Attributes) (see [below for nested schema](#nestedatt--notification_settings))
 - `rule_type` (String)
 - `schema_version` (String)
 
@@ -908,7 +993,12 @@ resource "fusescope_rule" "p99_latency" {
 - `annotations` (Map of String)
 - `description` (String)
 - `disabled` (Boolean)
+- `eval_window` (String)
+- `evaluation` (Attributes) (see [below for nested schema](#nestedatt--evaluation))
+- `frequency` (String)
 - `labels` (Map of String)
+- `notification_settings` (Attributes) (see [below for nested schema](#nestedatt--notification_settings))
+- `preferred_channels` (List of String)
 
 ### Read-Only
 
@@ -921,16 +1011,20 @@ Required:
 
 - `composite_query` (Attributes) (see [below for nested schema](#nestedatt--condition--composite_query))
 - `selected_query_name` (String)
-- `thresholds` (Attributes) (see [below for nested schema](#nestedatt--condition--thresholds))
 
 Optional:
 
 - `absent_for` (Number)
 - `alert_on_absent` (Boolean)
 - `algorithm` (String)
+- `match_type` (String)
+- `op` (String)
 - `require_min_points` (Boolean)
 - `required_num_points` (Number)
 - `seasonality` (String)
+- `target` (Number)
+- `target_unit` (String)
+- `thresholds` (Attributes) (see [below for nested schema](#nestedatt--condition--thresholds))
 
 <a id="nestedatt--condition--composite_query"></a>
 ### Nested Schema for `condition.composite_query`
