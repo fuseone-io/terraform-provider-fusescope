@@ -5,12 +5,15 @@ package apitypes
 
 // Defines values for RuletypesPostableRuleSchemaVersion.
 const (
+	RuletypesPostableRuleSchemaVersionV1       RuletypesPostableRuleSchemaVersion = "v1"
 	RuletypesPostableRuleSchemaVersionV2alpha1 RuletypesPostableRuleSchemaVersion = "v2alpha1"
 )
 
 // Valid indicates whether the value is a known member of the RuletypesPostableRuleSchemaVersion enum.
 func (e RuletypesPostableRuleSchemaVersion) Valid() bool {
 	switch e {
+	case RuletypesPostableRuleSchemaVersionV1:
+		return true
 	case RuletypesPostableRuleSchemaVersionV2alpha1:
 		return true
 	default:
@@ -26,9 +29,12 @@ type RuletypesPostableRule struct {
 	Condition            RuletypesRuleCondition             `json:"condition"`
 	Description          *string                            `json:"description,omitempty"`
 	Disabled             *bool                              `json:"disabled,omitempty"`
-	Evaluation           RuletypesEvaluationEnvelope        `json:"evaluation"`
+	EvalWindow           *string                            `json:"evalWindow,omitempty"`
+	Evaluation           *RuletypesEvaluationEnvelope       `json:"evaluation,omitempty"`
+	Frequency            *string                            `json:"frequency,omitempty"`
 	Labels               *map[string]string                 `json:"labels,omitempty"`
-	NotificationSettings RuletypesNotificationSettings      `json:"notificationSettings"`
+	NotificationSettings *RuletypesNotificationSettings     `json:"notificationSettings,omitempty"`
+	PreferredChannels    *[]string                          `json:"preferredChannels,omitempty"`
 	RuleType             RuletypesRuleType                  `json:"ruleType"`
 	SchemaVersion        RuletypesPostableRuleSchemaVersion `json:"schemaVersion"`
 }
