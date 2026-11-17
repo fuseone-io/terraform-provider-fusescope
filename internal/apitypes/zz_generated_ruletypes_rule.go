@@ -9,12 +9,15 @@ import (
 
 // Defines values for RuletypesRuleSchemaVersion.
 const (
+	RuletypesRuleSchemaVersionV1       RuletypesRuleSchemaVersion = "v1"
 	RuletypesRuleSchemaVersionV2alpha1 RuletypesRuleSchemaVersion = "v2alpha1"
 )
 
 // Valid indicates whether the value is a known member of the RuletypesRuleSchemaVersion enum.
 func (e RuletypesRuleSchemaVersion) Valid() bool {
 	switch e {
+	case RuletypesRuleSchemaVersionV1:
+		return true
 	case RuletypesRuleSchemaVersionV2alpha1:
 		return true
 	default:
@@ -24,23 +27,26 @@ func (e RuletypesRuleSchemaVersion) Valid() bool {
 
 // RuletypesRule defines model for RuletypesRule.
 type RuletypesRule struct {
-	Alert                string                        `json:"alert"`
-	AlertType            RuletypesAlertType            `json:"alertType"`
-	Annotations          *map[string]string            `json:"annotations,omitempty"`
-	Condition            RuletypesRuleCondition        `json:"condition"`
-	CreatedAt            *time.Time                    `json:"createdAt,omitempty"`
-	CreatedBy            *string                       `json:"createdBy,omitempty"`
-	Description          *string                       `json:"description,omitempty"`
-	Disabled             *bool                         `json:"disabled,omitempty"`
-	Evaluation           RuletypesEvaluationEnvelope   `json:"evaluation"`
-	Id                   string                        `json:"id"`
-	Labels               *map[string]string            `json:"labels,omitempty"`
-	NotificationSettings RuletypesNotificationSettings `json:"notificationSettings"`
-	RuleType             RuletypesRuleType             `json:"ruleType"`
-	SchemaVersion        RuletypesRuleSchemaVersion    `json:"schemaVersion"`
-	State                RuletypesAlertState           `json:"state"`
-	UpdatedAt            *time.Time                    `json:"updatedAt,omitempty"`
-	UpdatedBy            *string                       `json:"updatedBy,omitempty"`
+	Alert                string                         `json:"alert"`
+	AlertType            RuletypesAlertType             `json:"alertType"`
+	Annotations          *map[string]string             `json:"annotations,omitempty"`
+	Condition            RuletypesRuleCondition         `json:"condition"`
+	CreatedAt            *time.Time                     `json:"createdAt,omitempty"`
+	CreatedBy            *string                        `json:"createdBy,omitempty"`
+	Description          *string                        `json:"description,omitempty"`
+	Disabled             *bool                          `json:"disabled,omitempty"`
+	EvalWindow           *string                        `json:"evalWindow,omitempty"`
+	Evaluation           *RuletypesEvaluationEnvelope   `json:"evaluation,omitempty"`
+	Frequency            *string                        `json:"frequency,omitempty"`
+	Id                   string                         `json:"id"`
+	Labels               *map[string]string             `json:"labels,omitempty"`
+	NotificationSettings *RuletypesNotificationSettings `json:"notificationSettings,omitempty"`
+	PreferredChannels    *[]string                      `json:"preferredChannels,omitempty"`
+	RuleType             RuletypesRuleType              `json:"ruleType"`
+	SchemaVersion        RuletypesRuleSchemaVersion     `json:"schemaVersion"`
+	State                RuletypesAlertState            `json:"state"`
+	UpdatedAt            *time.Time                     `json:"updatedAt,omitempty"`
+	UpdatedBy            *string                        `json:"updatedBy,omitempty"`
 }
 
 // RuletypesRuleSchemaVersion defines model for RuletypesRule.SchemaVersion.
