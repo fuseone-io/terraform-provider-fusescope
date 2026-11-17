@@ -15,9 +15,14 @@ resource "fusescope_notification_channel" "slack" {
 }
 
 resource "fusescope_rule" "scenario_02" {
-  alert      = "testdata-anomaly-seasonality"
-  alert_type = "METRIC_BASED_ALERT"
-  rule_type  = "anomaly_rule"
+  alert          = "testdata-anomaly-seasonality"
+  alert_type     = "METRIC_BASED_ALERT"
+  rule_type      = "anomaly_rule"
+  schema_version = "v1"
+
+  eval_window        = "5m"
+  frequency          = "1m"
+  preferred_channels = [fusescope_notification_channel.slack.display_name]
 
   condition = {
     algorithm           = "standard"
@@ -46,6 +51,18 @@ resource "fusescope_rule" "scenario_02" {
                     temporality       = "delta"
                   }
                 ]
+
+                functions = [
+                  {
+                    name = "anomaly"
+                    args = [
+                      {
+                        name  = "z_score_threshold"
+                        value = jsonencode(3)
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -54,34 +71,8 @@ resource "fusescope_rule" "scenario_02" {
     }
 
     selected_query_name = "A"
-
-    thresholds = {
-      basic = {
-        kind = "basic"
-        spec = [
-          {
-            channels   = [fusescope_notification_channel.slack.display_name]
-            match_type = "at_least_once"
-            name       = "traffic anomaly"
-            op         = "above"
-            target     = 3
-          }
-        ]
-      }
-    }
+    target              = 3
+    op                  = "above"
+    match_type          = "at_least_once"
   }
-
-  evaluation = {
-    rolling = {
-      kind = "rolling"
-      spec = {
-        eval_window = "5m"
-        frequency   = "1m"
-      }
-    }
-  }
-
-  notification_settings = {}
-
-  schema_version = "v2alpha1"
 }
